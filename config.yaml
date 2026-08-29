@@ -243,7 +243,7 @@ ricerche:
   - nome: etb-scintille-folgoranti-ita-sealed
     attiva: true
     in_pausa: false
-    intervallo_minuti: 30
+    intervallo_minuti: 5
     piattaforme:
       - subito
       - vinted
