@@ -2020,3 +2020,40 @@ class TestPotaturaRicerche(unittest.TestCase):
         self.stato.dati["storico"].append({"titolo": "orfano"})
         self.stato.pota_ricerche({"ps5-pro"})
         self.assertTrue(any(v.get("titolo") == "orfano" for v in self.stato.dati["storico"]))
+
+
+class TestSchedeDaConfigurazione(unittest.TestCase):
+    """
+    Le schede della pagina Annunci si costruiscono dalla configurazione e non
+    dall'archivio: una ricerca appena creata non ha ancora trovato nulla e
+    senza questo non comparirebbe, dando l'impressione di non essere stata
+    salvata.
+    """
+
+    def test_configurazione_illeggibile_non_rompe_la_pagina(self) -> None:
+        import app
+        from unittest import mock
+        with mock.patch.object(app, "carica_config", side_effect=RuntimeError("giu")):
+            self.assertEqual(app._ricerche_configurate(), {})
+
+    def test_riporta_lo_stato_di_esecuzione(self) -> None:
+        import app
+        from unittest import mock
+        documento = """
+impostazioni:
+  timezone: Europe/Rome
+ricerche:
+  - nome: attiva
+    attiva: true
+    in_pausa: false
+    piattaforme: [subito]
+    parole_chiave: "x"
+  - nome: sospesa
+    attiva: true
+    in_pausa: true
+    piattaforme: [subito]
+    parole_chiave: "y"
+"""
+        with mock.patch.object(app, "carica_config", return_value=(documento, "sha", "test")):
+            risultato = app._ricerche_configurate()
+        self.assertEqual(risultato, {"attiva": True, "sospesa": False})

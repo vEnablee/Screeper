@@ -420,6 +420,24 @@ def sezione_ricerca(nome: str, gruppo: pd.DataFrame, massimo: int) -> None:
         )
 
 
+def _ricerche_configurate() -> dict[str, bool]:
+    """
+    Nomi delle ricerche configurate e se sono in funzione.
+
+    Le schede della pagina Annunci si costruiscono da qui e non dall'archivio:
+    una ricerca appena creata non ha ancora trovato nulla, e senza questo
+    elenco non comparirebbe affatto — dando l'impressione di non essere stata
+    salvata. Se la configurazione non è leggibile si torna all'archivio.
+    """
+    try:
+        from config_loader import configurazione_da_documento, documento_da_testo
+        testo, _sha, _origine = carica_config()
+        configurazione = configurazione_da_documento(documento_da_testo(testo))
+        return {r.nome: r.eseguibile for r in configurazione.ricerche}
+    except Exception:
+        return {}
+
+
 def _elimina_ricerca(nome: str) -> None:
     """Rimuove una ricerca dalla configurazione, con conferma esplicita."""
     from config_loader import modifica_rimuovi_ricerca
@@ -530,13 +548,33 @@ def pagina_annunci() -> None:
                     "Allarga il periodo o azzera i filtri nella barra laterale.")
         return
 
-    # Una scheda per ricerca: mescolare prodotti diversi nella stessa lista
-    # rende impossibile confrontare i prezzi, che è il motivo per cui esistono
-    # le statistiche per ricerca.
-    nomi = sorted(filtrata["ricerca"].unique())
-    etichette = [f"{n}  ({int((filtrata['ricerca'] == n).sum())})" for n in nomi]
+    # Una scheda per ricerca CONFIGURATA, più quelle che hanno annunci in
+    # archivio ma non esistono più: mescolare prodotti diversi nella stessa
+    # lista rende impossibile confrontare i prezzi.
+    configurate = _ricerche_configurate()
+    in_archivio = set(filtrata["ricerca"].unique())
+    nomi = sorted(set(configurate) | in_archivio)
+
+    etichette = []
+    for n in nomi:
+        quanti = int((filtrata["ricerca"] == n).sum())
+        if n in configurate and not configurate[n]:
+            etichette.append(f"⏸ {n}")
+        elif n not in configurate:
+            etichette.append(f"{n}  (rimossa)")
+        else:
+            etichette.append(f"{n}  ({quanti})")
+
     for scheda, nome in zip(st.tabs(etichette), nomi):
         with scheda:
+            if nome in configurate and not configurate[nome]:
+                st.info("Ricerca sospesa: il monitor non la sta eseguendo. "
+                        "Riattivala dalla pagina Ricerche o con /resume su Telegram.",
+                        icon="⏸")
+            elif nome not in configurate:
+                st.warning("Questa ricerca non è più configurata. I suoi annunci "
+                           "spariranno dall'archivio al prossimo controllo.", icon="🗑")
+
             gruppo = filtrata[filtrata["ricerca"] == nome].copy()
             if solo_nuovi:
                 gruppo = gruppo[gruppo["data"].apply(lambda d: bool(novita(d)))]
@@ -545,8 +583,18 @@ def pagina_annunci() -> None:
                 if s["mediana"]:
                     gruppo = gruppo[gruppo["prezzo"] <= s["mediana"] * (1 + SOGLIA_CONVENIENTE)]
             if gruppo.empty:
-                stato_vuoto("Nessun annuncio con questi filtri",
-                            "Prova a togliere «solo convenienti» o «solo appena pubblicati».")
+                if solo_nuovi or solo_convenienti or scelte_p:
+                    stato_vuoto(
+                        "Nessun annuncio con questi filtri",
+                        "Prova ad azzerare i filtri nella barra laterale.", "filtro",
+                    )
+                else:
+                    stato_vuoto(
+                        "Ancora nessun annuncio",
+                        "Il monitor non ha ancora trovato nulla per questa ricerca. "
+                        "Al primo avvio notifica solo ciò che è stato pubblicato di "
+                        "recente, quindi può volerci qualche ora.", "cerca",
+                    )
             else:
                 sezione_ricerca(nome, gruppo, int(massimo))
             st.divider()
