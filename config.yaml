@@ -184,21 +184,55 @@ ricerche:
     subito:
       zona: italia
       raggio_km: 0
+  # ---------------------------------------------------------------------------
+  # Elite Trainer Box — Rivali Predestinati
+  #
+  # Tarata sui 27 risultati reali del 29/08/2026.
+  #
+  # * PAROLE CHIAVE CORTE. Con `solo_titolo` attivo devono comparire TUTTE nel
+  #   titolo: "etb rivali predestinati ita sealed" trovava 4 annunci contro 27,
+  #   perdendo i piu' economici. "ita" e "sealed" sono attributi che il
+  #   venditore puo' scrivere o no, quindi non sono parole chiave.
+  #
+  # * NIENTE "box" fra le escluse: ETB sta per Elite Trainer BOX, e chi scrive
+  #   l'acronimo per esteso verrebbe scartato dal nostro stesso filtro.
+  #
+  # * condizione: qualsiasi. Su Subito la condizione la dichiara chi vende, e
+  #   la sbaglia spesso: un annuncio intitolato "ETB Ita Rivali Predestinati
+  #   Sealed" a 79 EUR risultava "usato". Le parole escluse (aperto, vuoto,
+  #   usato nel titolo) filtrano meglio della casella.
+  #
+  # * 60-160 EUR. La mediana del mercato e' 125: sotto i 60 ci sono scatole
+  #   vuote e carte sfuse, sopra i 160 bundle e display.
+  # ---------------------------------------------------------------------------
   - nome: etb-rivali-predestinati-ita-sealed
     attiva: true
     in_pausa: false
     intervallo_minuti: 15
     piattaforme:
       - subito
-    parole_chiave: ETB Rivali Predestinati ITA Sealed
+    parole_chiave: etb rivali predestinati
     parole_escluse:
-      - box
-      - '36'
-      - confezione
+      - vuoto
+      - vuota
+      - aperto
+      - aperta
+      - usato
+      - cerco
+      - scambio
+      - singole
+      - sleeves
+      - bustine
       - buste
-    prezzo_min:
-    prezzo_max: 100.0
-    condizione: nuovo
+      - display
+      - bundle
+      - '36'
+      - proxy
+      - inglese
+      - eng
+    prezzo_min: 60
+    prezzo_max: 160
+    condizione: qualsiasi
     solo_titolo: true
     spedizione_inclusa_richiesta: false
     subito:
