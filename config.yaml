@@ -150,7 +150,7 @@ ricerche:
       raggio_km: 0
   - nome: ps5-digital
     attiva: true
-    in_pausa: false
+    in_pausa: true
     intervallo_minuti: 15
     piattaforme:
       - subito
