@@ -1057,12 +1057,11 @@ def _campi_ricerca(ricerca, prefisso: str) -> dict[str, Any]:
         intervallo = st.number_input(
             "Ogni quanti minuti", min_value=5, max_value=1440, step=5,
             value=ricerca.intervallo_minuti if ricerca else 30, key=f"{prefisso}_int",
-            help="Tempo minimo fra due controlli DI QUESTA ricerca. È un "
-                 "freno che agisce sopra il cron: il monitor si sveglia ogni "
-                 "5 minuti, ma con 30 questa ricerca gira solo ogni 30. "
-                 "Più basso = scopri prima, ma più richieste al sito e più "
-                 "rischio di essere bloccato. Non ha senso metterlo sotto "
-                 "l'intervallo del cron.",
+            help="Tempo minimo fra due controlli DI QUESTA ricerca, applicato "
+                 "sopra il trigger esterno che sveglia il monitor ogni 15 "
+                 "minuti. Viene arrotondato per eccesso a un multiplo di 15: "
+                 "un valore di 20 diventa 30, uno di 5 diventa 15. Più basso "
+                 "significa scoprire prima ma anche più richieste al sito.",
         )
     with c2:
         zona = st.text_input(

@@ -4,9 +4,10 @@
 # Modificabile dall'editor web di GitHub, dai comandi del bot Telegram o dalla
 # dashboard: tutti e tre ricommittano questo file preservandone i commenti.
 #
-# `intervallo_minuti` è un freno applicato SOPRA il trigger esterno: il
-# monitor si sveglia ogni 15 minuti, ma una ricerca con intervallo 60 gira
-# solo una volta l'ora.
+# `intervallo_minuti` è un freno applicato SOPRA il trigger esterno, che
+# sveglia il monitor ogni 15 minuti. Viene di fatto ARROTONDATO PER ECCESSO a
+# un multiplo di 15: 5 e 10 diventano 15, 20 diventa 30. Impostarlo sotto la
+# cadenza del trigger non serve a nulla.
 # =============================================================================
 
 impostazioni:

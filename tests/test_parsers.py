@@ -2057,3 +2057,61 @@ ricerche:
         with mock.patch.object(app, "carica_config", return_value=(documento, "sha", "test")):
             risultato = app._ricerche_configurate()
         self.assertEqual(risultato, {"attiva": True, "sospesa": False})
+
+
+class TestIntervalloEffettivo(unittest.TestCase):
+    """
+    `intervallo_minuti` è un freno applicato sopra il trigger esterno, non uno
+    scheduler autonomo: l'intervallo reale è arrotondato per eccesso alla
+    cadenza dei risvegli. È la cosa che sorprende chi imposta 20 minuti e ne
+    ottiene 30.
+    """
+
+    def _simula(self, intervallo: int, cadenza: int, durata: int = 120) -> list[int]:
+        from models import Ricerca
+        stato = Stato.nuovo()
+        ricerca = Ricerca(nome="r", parole_chiave="x", piattaforme=["subito"],
+                          intervallo_minuti=intervallo)
+        inizio = adesso_utc()
+        eseguita = []
+        for minuti in range(0, durata + 1, cadenza):
+            adesso = inizio + timedelta(minutes=minuti)
+            if stato.da_eseguire(ricerca, adesso=adesso):
+                eseguita.append(minuti)
+                stato.dati["ricerche"]["r"] = {
+                    "ultima_esecuzione": adesso.isoformat(),
+                    "ultimo_nuovo": None, "totale_notificati": 0,
+                }
+        return eseguita
+
+    def test_intervallo_uguale_alla_cadenza(self) -> None:
+        self.assertEqual(self._simula(15, 15), [0, 15, 30, 45, 60, 75, 90, 105, 120])
+
+    def test_intervallo_sotto_la_cadenza_non_accelera(self) -> None:
+        """Mettere 5 minuti con risvegli ogni 15 non fa girare più spesso."""
+        self.assertEqual(self._simula(5, 15), self._simula(15, 15))
+
+    def test_intervallo_intermedio_viene_arrotondato_per_eccesso(self) -> None:
+        """20 minuti con risvegli ogni 15 diventano 30, non 20."""
+        self.assertEqual(self._simula(20, 15), [0, 30, 60, 90, 120])
+
+    def test_multipli_esatti(self) -> None:
+        self.assertEqual(self._simula(30, 15), [0, 30, 60, 90, 120])
+        self.assertEqual(self._simula(60, 15), [0, 60, 120])
+
+    def test_la_prima_esecuzione_e_sempre_immediata(self) -> None:
+        for intervallo in (5, 30, 240):
+            self.assertEqual(self._simula(intervallo, 15)[0], 0)
+
+    def test_tolleranza_sui_ritardi_del_trigger(self) -> None:
+        """Un risveglio in ritardo di pochi secondi non deve far saltare il
+        controllo fino al giro dopo."""
+        from models import Ricerca
+        stato = Stato.nuovo()
+        ricerca = Ricerca(nome="r", parole_chiave="x", piattaforme=["subito"],
+                          intervallo_minuti=15)
+        inizio = adesso_utc()
+        stato.dati["ricerche"]["r"] = {"ultima_esecuzione": inizio.isoformat(),
+                                       "ultimo_nuovo": None, "totale_notificati": 0}
+        quasi = inizio + timedelta(minutes=14, seconds=45)
+        self.assertTrue(stato.da_eseguire(ricerca, adesso=quasi))

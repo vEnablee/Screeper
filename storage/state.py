@@ -164,8 +164,12 @@ class Stato:
         if ultima is None:
             return True
         trascorsi = (adesso or adesso_utc()) - ultima
-        # Tolleranza di 30s: il cron non è mai puntuale al secondo e senza
-        # margine una ricerca a 15' verrebbe saltata un run sì e uno no.
+        # Tolleranza di 30s: il trigger non è puntuale al secondo e senza
+        # margine una ricerca a 15' verrebbe saltata un risveglio sì e uno no.
+        #
+        # Conseguenza da tenere a mente: l'intervallo effettivo è arrotondato
+        # per eccesso alla cadenza del trigger. Con risvegli ogni 15 minuti,
+        # `intervallo_minuti: 20` produce un controllo ogni 30, non ogni 20.
         return trascorsi >= timedelta(minutes=ricerca.intervallo_minuti) - timedelta(seconds=30)
 
     def registra_esecuzione(self, nome: str, notificati: int = 0) -> None:
