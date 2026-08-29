@@ -239,3 +239,35 @@ ricerche:
     subito:
       zona: italia
       raggio_km: 0
+  - nome: etb-scintille-folgoranti-ita-sealed
+    attiva: true
+    in_pausa: false
+    intervallo_minuti: 15
+    piattaforme: [subito, vinted]
+    parole_chiave: etb scintille folgoranti
+    parole_escluse:
+      - vuoto
+      - vuota
+      - aperto
+      - aperta
+      - usato
+      - cerco
+      - scambio
+      - singole
+      - sleeves
+      - bustine
+      - buste
+      - display
+      - bundle
+      - '36'
+      - proxy
+      - inglese
+      - eng
+    prezzo_min: 60.0
+    prezzo_max: 130.0
+    condizione: qualsiasi
+    solo_titolo: true
+    spedizione_inclusa_richiesta: false
+    subito:
+      zona: italia
+      raggio_km: 0
