@@ -143,11 +143,6 @@ ricerche:
     prezzo_min: 200.0
     prezzo_max: 400.0
     condizione: qualsiasi
-    # Scarta gli annunci pubblicati piu' di N giorni fa: su questi mercati un
-    # annuncio fermo da settimane e' invenduto per un motivo. Gli annunci di
-    # data ignota passano comunque, altrimenti si perderebbe quasi tutto
-    # Vinted, che spesso non la espone.
-    eta_massima_giorni: 3
     solo_titolo: true
     spedizione_inclusa_richiesta: false
     subito:
