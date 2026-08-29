@@ -1,0 +1,25 @@
+# ATTENZIONE — questo file è per la DASHBOARD, non per il monitor.
+#
+# Streamlit Community Cloud installa obbligatoriamente il requirements.txt
+# che trova nella radice del repository. Tenerlo minimale significa deploy
+# veloci e nessuna dipendenza di scraping su un'app che non scrapa nulla.
+#
+# Le dipendenze del monitor stanno in requirements-monitor.txt, che è quello
+# installato dal workflow di GitHub Actions.
+
+streamlit>=1.40,<2
+pandas>=2.1,<3
+requests>=2.31,<3
+
+# Grafici. Il vincolo <6 è deliberato: le versioni 6.x usano TypedDict con
+# `closed=True` (PEP 728), che su Python 3.14 solleva TypeError all'import.
+# Nel dubbio, app.py sopravvive comunque senza Altair mostrando i dati in
+# tabella, ma con questo vincolo i grafici ci sono.
+altair>=5.4,<6
+
+# Richiesto dalle versioni recenti di Altair per i TypedDict estesi.
+typing_extensions>=4.12
+
+# Serve alla pagina "Ricerche" per modificare config.yaml preservandone i
+# commenti quando scrive sul repository.
+ruamel.yaml>=0.18,<0.19

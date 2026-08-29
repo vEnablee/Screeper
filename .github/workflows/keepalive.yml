@@ -1,0 +1,52 @@
+# =============================================================================
+# Mantiene vivo il cron del monitor.
+#
+# GitHub DISATTIVA automaticamente i workflow schedulati di un repository che
+# non riceve commit per 60 giorni, e manda solo una mail facile da perdere.
+# Questo workflow committa un timestamp una volta al mese: il repository
+# risulta attivo e lo scheduler non viene mai sospeso.
+#
+# Se preferisci farne a meno, cancella questo file: ricordati però di fare un
+# commit qualsiasi almeno ogni due mesi. Il messaggio giornaliero di heartbeat
+# su Telegram serve appunto ad accorgersi se il monitor si è fermato.
+# =============================================================================
+
+name: Keepalive del cron
+
+on:
+  # ⏸ SOSPESO insieme al monitor (2026-08-28). Il keepalive serve solo quando
+  # il cron del monitor è attivo: da riattivare nello stesso momento.
+  # schedule:
+  #   # Alle 5:17 UTC del primo giorno di ogni mese.
+  #   - cron: '17 5 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Commit del timestamp
+        run: |
+          mkdir -p .github
+          date -u +"Ultimo keepalive: %Y-%m-%dT%H:%M:%SZ" > .github/keepalive
+          git config user.name  "screeper[bot]"
+          git config user.email "screeper@users.noreply.github.com"
+          git add .github/keepalive
+          # `--allow-empty` non serve: il file cambia sempre, ma il controllo
+          # evita un errore se per qualche motivo il contenuto fosse identico.
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica da committare."
+          else
+            git commit -m "chore: keepalive del cron [skip ci]"
+            git push
+          fi

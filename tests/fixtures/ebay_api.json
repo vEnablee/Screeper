@@ -1,0 +1,33 @@
+{
+  "total": 2,
+  "itemSummaries": [
+    {
+      "itemId": "v1|335678901234|0",
+      "title": "Apple iPhone 13 128GB Mezzanotte - Ottime condizioni",
+      "itemWebUrl": "https://www.ebay.it/itm/335678901234",
+      "price": {"value": "289.00", "currency": "EUR"},
+      "image": {"imageUrl": "https://i.ebayimg.com/images/g/aaa/s-l500.jpg"},
+      "condition": "Usato",
+      "conditionId": "3000",
+      "itemLocation": {"city": "Milano", "stateOrProvince": "MI", "country": "IT"},
+      "seller": {"username": "tech_store_mi", "feedbackPercentage": "99.4"},
+      "shippingOptions": [
+        {"shippingCostType": "FIXED", "shippingCost": {"value": "0.00", "currency": "EUR"}}
+      ],
+      "itemCreationDate": "2026-08-28T07:12:44.000Z"
+    },
+    {
+      "itemId": "v1|335678905555|0",
+      "title": "iPhone 13 SCHERMO ROTTO per ricambi",
+      "itemWebUrl": "https://www.ebay.it/itm/335678905555",
+      "price": {"value": "95.50", "currency": "EUR"},
+      "image": {"imageUrl": "https://i.ebayimg.com/images/g/bbb/s-l500.jpg"},
+      "condition": "Da riparare",
+      "itemLocation": {"country": "IT"},
+      "seller": {"username": "ricambi_pro"},
+      "shippingOptions": [
+        {"shippingCost": {"value": "6.90", "currency": "EUR"}}
+      ]
+    }
+  ]
+}

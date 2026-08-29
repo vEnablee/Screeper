@@ -1,0 +1,186 @@
+# =============================================================================
+# SCreeper — configurazione delle ricerche.
+#
+# Modificabile dall'editor web di GitHub, dai comandi del bot Telegram o dalla
+# dashboard: tutti e tre ricommittano questo file preservandone i commenti.
+#
+# `intervallo_minuti` è un freno applicato SOPRA il trigger esterno: il
+# monitor si sveglia ogni 15 minuti, ma una ricerca con intervallo 60 gira
+# solo una volta l'ora.
+# =============================================================================
+
+impostazioni:
+  # Fuso orario usato per i log, per l'heartbeat e per la formattazione delle
+  # date nelle notifiche. Internamente tutto è salvato in UTC ISO-8601.
+  timezone: Europe/Rome
+
+  # Al primo avvio di una ricerca notifica solo gli annunci pubblicati negli
+  # ultimi N minuti; il resto è marcato come visto in silenzio. Va tarato sul
+  # volume: 60 per una ricerca affollata, 1440 per una lenta, dove altrimenti
+  # il primo giro non notifica nulla e sembra tutto rotto.
+  finestra_primo_avvio_minuti: 1440
+
+  # Numero massimo di notifiche Telegram inviate in un singolo run.
+  # Superata la soglia viene mandato UN solo messaggio riassuntivo.
+  max_notifiche_per_run: 15
+
+  # Pagine di risultati controllate per ogni coppia (ricerca, piattaforma).
+  # A regime 1 pagina ordinata per "più recenti" è sufficiente e riduce
+  # sensibilmente il rischio di blocco; al primo avvio se ne leggono 2 per
+  # costruire una baseline più solida.
+  pagine_per_ricerca: 1
+  pagine_primo_avvio: 2
+
+  # Attesa fra due richieste ALLO STESSO dominio. Fra domini diversi non si
+  # aspetta: un sito non sa nulla delle richieste fatte a un altro.
+  # Se iniziano ad arrivare 403, il parametro da alzare è intervallo_minuti.
+  delay_min_secondi: 3.0
+  delay_max_secondi: 8.0
+
+  # Timeout di una singola richiesta HTTP e numero di tentativi.
+  timeout_secondi: 20
+  max_tentativi: 3
+
+  # RETENTION dello stato salvato sul Gist. Il Gist ha limiti di dimensione,
+  # quindi lo storico viene potato a ogni run applicando ENTRAMBI i vincoli.
+  storico_giorni: 30
+  storico_max_annunci: 4000
+
+  # Riconoscimento degli annunci ripubblicati: stesso titolo + prezzo +
+  # venditore + piattaforma ma id diverso. Se true non vengono rinotificati.
+  rileva_ripubblicati: true
+
+  # Se uno scraper restituisce 0 risultati per N run consecutivi viene inviato
+  # UN alert Telegram "scraper probabilmente rotto" (non ripetuto finché non
+  # torna a produrre risultati).
+  run_zero_per_alert: 3
+
+  # Dopo un blocco (403/429/challenge) la piattaforma resta in quarantena per
+  # N controlli invece di insistere. Insistere è il modo migliore per
+  # trasformare un blocco temporaneo in permanente.
+  run_pausa_dopo_blocco: 12
+
+  # Messaggio Telegram giornaliero di "sono vivo": è l'unico modo per
+  # accorgersi che GitHub ha disattivato il cron dopo 60 giorni di inattività.
+  heartbeat_giornaliero: true
+  heartbeat_ora: 9   # ora locale (timezone sopra)
+
+  # Notifica su Telegram anche gli errori di scraping, non solo gli annunci.
+  # Se false gli errori restano solo nei log di GitHub Actions.
+  notifica_errori: true
+
+  # Avviso di avvenuto controllo:
+  #   aggiorna  un solo messaggio riscritto ogni volta, senza squillo (fissalo
+  #             in cima alla chat). Consigliato.
+  #   sempre    un messaggio nuovo a ogni controllo: sono decine al giorno e
+  #             le notifiche degli annunci ci annegherebbero dentro.
+  #   mai       nessun avviso.
+  notifica_ogni_controllo: aggiorna
+
+
+ricerche:
+
+  # ---------------------------------------------------------------------------
+  # PlayStation 5 Pro
+  #
+  # Filtri tarati su una ricerca reale del 28/08/2026, non a intuito.
+  #
+  # * VINTED ESCLUSA. Su 48 risultati per "ps5 pro" non c'era una sola
+  #   console: stand, cover, giochi PS3, annunci esteri. Vinted tratta
+  #   abbigliamento, le console no.
+  #
+  # * prezzo_min: 350 e' il filtro piu' efficace di tutti. Da solo elimina
+  #   controller (65-100 EUR), supporti (20-30 EUR) e giochi (7-16 EUR), che
+  #   sono la maggior parte del rumore.
+  #
+  # * Le parole escluse coprono SOLO cio' che supera comunque il filtro di
+  #   prezzo: SSD Samsung 990 PRO (480 EUR), altre console, ricambi.
+  #   NON contengono "controller", "dualsense", "giochi", "stand" e simili:
+  #   una console si vende quasi sempre insieme ai suoi accessori, e
+  #   vietarli faceva scartare annunci veri. Nella prova veniva escluso un
+  #   PS5 Pro 2TB completo a 365 EUR, il piu' conveniente del lotto.
+  #
+  # * solo_titolo: true impone che "ps5" e "pro" siano ENTRAMBI nel titolo.
+  #
+  # * eBay e' incluso ma senza credenziali API ripiega sull'HTML, che dagli
+  #   IP dei runner GitHub viene spesso rifiutato con 403. In quel caso va
+  #   in quarantena da sola e Subito continua a funzionare.
+  #   Per toglierla:  piattaforme: [subito]
+  #
+  # Risultato della prova: 19 annunci grezzi -> 16 dopo i filtri, con un solo
+  # falso positivo (una PS5 Digital venduta con un "Controller Pro").
+  # ---------------------------------------------------------------------------
+  - nome: ps5-pro
+    attiva: true
+    in_pausa: false
+    intervallo_minuti: 15
+    piattaforme:
+      - subito
+      - vinted
+    parole_chiave: ps5 pro
+    parole_escluse:
+      - ssd
+      - m.2
+      - nvme
+      - samsung
+      - ps4
+      - ps3
+      - xbox
+      - slim
+      - fat
+      - cerco
+      - scambio
+      - ricambi
+      - rotto
+      - guasto
+      - non funzionante
+      - difettosa
+      - scatola vuota
+      - controller
+      - joystick
+      - joypad
+    prezzo_min: 200.0
+    prezzo_max: 400.0
+    condizione: qualsiasi
+    solo_titolo: true
+    spedizione_inclusa_richiesta: false
+    subito:
+      zona: italia
+      raggio_km: 0
+  - nome: ps5-digital
+    attiva: true
+    in_pausa: false
+    intervallo_minuti: 15
+    piattaforme:
+      - subito
+      - vinted
+    parole_chiave: ps5 digital
+    parole_escluse:
+      - ssd
+      - m.2
+      - nvme
+      - samsung
+      - ps4
+      - ps3
+      - xbox
+      - slim
+      - fat
+      - cerco
+      - scambio
+      - ricambi
+      - rotto
+      - guasto
+      - non funzionante
+      - difettosa
+      - scatola vuota
+      - controller
+      - joystick
+      - joypad
+    prezzo_min: 200.0
+    prezzo_max: 400.0
+    condizione: qualsiasi
+    solo_titolo: true
+    spedizione_inclusa_richiesta: false
+    subito:
+      zona: italia
+      raggio_km: 0

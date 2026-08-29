@@ -1,0 +1,20 @@
+# Tema della dashboard.
+#
+# È volutamente fissato su "dark" invece di seguire l'impostazione del
+# browser: i colori delle serie nei grafici sono stati scelti e validati
+# contro una superficie scura precisa (#1a1a19), verificando separazione
+# per daltonismo e contrasto. Lasciando cambiare il fondo, quelle garanzie
+# decadrebbero.
+[theme]
+base = "dark"
+primaryColor = "#3987e5"
+backgroundColor = "#121211"
+secondaryBackgroundColor = "#1a1a19"
+textColor = "#f2f2ee"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+headless = true

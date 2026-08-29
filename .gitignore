@@ -1,0 +1,23 @@
+# Documentazione: resta su disco per consultazione, ma fuori dal repository
+# pubblico. Contiene la guida di setup completa.
+README.md
+
+# Stato locale del monitor: su Actions è effimero, in locale non va committato.
+.state/
+
+# Segreti per l'esecuzione locale.
+.env
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Sistema operativo / editor
+.DS_Store
+.idea/
+.vscode/

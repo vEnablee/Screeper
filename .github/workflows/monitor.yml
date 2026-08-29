@@ -1,0 +1,121 @@
+# =============================================================================
+# SCreeper — un ciclo di controllo per ogni esecuzione.
+#
+# Lo fa partire un cronjob su cron-job.org, ogni 15 minuti dalle 8:00 alle
+# 23:45 (fuso Europe/Rome, quindi l'ora legale la gestisce il servizio).
+# Per cambiare frequenza si modifica il cronjob, non questo file.
+#
+# `intervallo_minuti` in config.yaml è un freno separato: il trigger decide
+# ogni quanto il monitor si SVEGLIA — ed è anche la latenza dei comandi
+# Telegram, perché il bot vive dentro il run — mentre l'intervallo decide
+# quante volte ciascuna ricerca interroghi davvero i marketplace.
+# =============================================================================
+
+name: SCreeper
+
+on:
+  # Nessuno `schedule` qui, deliberatamente. Lo scheduler di GitHub su questo
+  # repository non ha mai emesso l'evento per ore, poi ne ha emesso UNO alle
+  # 05:07 mentre la finestra configurata era 8:00-23:59. Due scheduler in
+  # parallelo producono esecuzioni a orari imprevedibili senza sapere chi le
+  # ha causate, quindi ne resta uno solo: il trigger esterno chiama
+  # POST /actions/workflows/monitor.yml/dispatches con body {"ref": "main"},
+  # usando un token fine-grained limitato a questo repository e al solo
+  # permesso Actions.
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Prova a vuoto: nessuna notifica, nessuna scrittura sul Gist'
+        type: boolean
+        default: false
+      seed:
+        description: 'Semina: marca tutto come già visto senza notificare'
+        type: boolean
+        default: false
+      verbose:
+        description: 'Log di dettaglio'
+        type: boolean
+        default: false
+      diagnostica:
+        description: 'Diagnostica: verifica i secret uno per uno e non fa altro'
+        type: boolean
+        default: false
+
+# Serve al bot Telegram per committare config.yaml.
+permissions:
+  contents: write
+
+# Due esecuzioni non devono sovrapporsi: scriverebbero lo stesso Gist. La
+# seconda attende la prima, e non serve logica di merge nel codice.
+concurrency:
+  group: screeper
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Controllo annunci
+    runs-on: ubuntu-latest
+    # ⛔ QUESTO REPOSITORY È PUBBLICO: non sostituire MAI con `self-hosted`.
+    # Chiunque può aprire una pull request da un fork, e un runner ospitato
+    # in casa eseguirebbe quel codice sulla tua rete domestica. Il runner
+    # self-hosted è utilizzabile solo su un repository privato.
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v7
+
+      - name: Setup di Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-monitor.txt
+
+      - name: Installazione dipendenze
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-monitor.txt
+
+      - name: Esecuzione del monitor
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          # Usato dal bot Telegram per committare config.yaml.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Opzionali: consentono a /spegni e a /status di controllare il
+          # cronjob esterno che fa partire questo workflow.
+          CRONJOB_API_KEY: ${{ secrets.CRONJOB_API_KEY }}
+          CRONJOB_JOB_ID: ${{ secrets.CRONJOB_JOB_ID }}
+          PYTHONUNBUFFERED: '1'
+        run: |
+          # La diagnostica sostituisce il run: verifica i segreti e si ferma.
+          if [ "${{ inputs.diagnostica }}" = "true" ]; then
+            python diagnostica.py
+            exit $?
+          fi
+
+          ARGOMENTI=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGOMENTI="$ARGOMENTI --dry-run"; fi
+          if [ "${{ inputs.seed }}" = "true" ]; then ARGOMENTI="$ARGOMENTI --seed"; fi
+          if [ "${{ inputs.verbose }}" = "true" ]; then ARGOMENTI="$ARGOMENTI --verbose"; fi
+          echo "Argomenti: ${ARGOMENTI:-(nessuno)}"
+          python main.py $ARGOMENTI
+
+      # Rete di sicurezza: se il passo precedente è morto a metà, lo stato
+      # locale esiste comunque (main.py lo scrive in un blocco finally) ma
+      # potrebbe non essere arrivato sul Gist. Questo step lo carica.
+      # Se è già stato caricato, non fa nulla.
+      # Rete di sicurezza: scrive il riepilogo nella pagina del run e carica
+      # lo stato se il passo precedente è morto prima di farlo.
+      - name: Salvataggio dello stato e riepilogo
+        if: always()
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+        run: python -m storage.state --upload

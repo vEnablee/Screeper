@@ -1,0 +1,400 @@
+{
+ "ads": [
+  {
+   "urn": "id:ad:9a3b4a71-bbe4-40bc-8f4f-dc16d1c9f59f:list:657586319",
+   "type": {
+    "key": "s",
+    "value": "In vendita",
+    "weight": 0
+   },
+   "category": {
+    "key": "10",
+    "value": "Informatica",
+    "friendly_name": "informatica",
+    "macrocategory_id": "9",
+    "weight": 23
+   },
+   "subject": "HP TPC-W016 Thin Client Nero Pc Client",
+   "body": "Thin client HP TPC-W016 di colore nero.\nRam 4Gb\nSSD 8Gb\nVendo thin client HP modello TPC-W016, ideale per ambienti aziendali, postazioni di lavoro leggere, accesso a server remoti o virtual desktop (VDI).\nNe ho circa 50 disponibile per lotti\nHP Thin client t520 Flexible, 1,2 GHz, AMD G, 2nd Generation AMD Embedded G-Series SoC, GX-212JC, 1 MB, 4 GB\nCompratelo solo se sapete cosa è.\nDispositivo compatto, silenzioso e a basso consumo energetico, perfetto per uffici, scuole o utilizzo professionale.\nDesign compatto e salvaspazio\nBasso consumo e funzionamento silenzioso\nIdeale per accesso remoto, RDP\nIn buone condizioni",
+   "dates": {
+    "display": "2026-08-18 18:10:34",
+    "expiration": "2027-08-18 18:10:34",
+    "display_iso8601": "2026-08-18T18:10:34.933+0200",
+    "expiration_iso8601": "2027-08-18T18:10:34.933+0200"
+   },
+   "images": [
+    {
+     "uri": "imgid:ebc64f8e-1b0a-48ba-8f11-9ba23c4f7549",
+     "base_url": "https://s.sbito.it/img/eb/ebc64f8e-1b0a-48ba-8f11-9ba23c4f7549",
+     "cdn_base_url": "https://images.sbito.it/api/v1/sbt-ads-images-pro/images/eb/ebc64f8e-1b0a-48ba-8f11-9ba23c4f7549"
+    }
+   ],
+   "images_360": [],
+   "features": [
+    {
+     "type": "list",
+     "uri": "/item_condition",
+     "label": "Condizione",
+     "values": [
+      {
+       "key": "20",
+       "value": "Come nuovo - perfetto o ricondizionato",
+       "weight": 2,
+       "description": "Oggetto in perfette condizioni oppure rigenerato con parti sostitutive senza difetti."
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/item_shipping_type",
+     "label": "Metodo di spedizione",
+     "values": [
+      {
+       "key": "0",
+       "value": "Spedizione con TuttoSubito",
+       "weight": 1
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/computer_type",
+     "label": "Tipologia di computer",
+     "values": [
+      {
+       "key": "3",
+       "value": "Accessori",
+       "weight": 3
+      }
+     ]
+    },
+    {
+     "type": "number",
+     "uri": "/item_shipping_cost_tuttosubito",
+     "label": "Costo della spedizione",
+     "values": [
+      {
+       "key": "2,39",
+       "value": "2,39 €"
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/item_shipping_package_size",
+     "label": "Peso del pacco",
+     "values": [
+      {
+       "key": "10",
+       "value": "Piccolo - fino a 2kg",
+       "weight": 0
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/shipping_carriers",
+     "label": "Corrieri per la spedizione",
+     "values": [
+      {
+       "key": "poste_italiane",
+       "value": "poste_italiane"
+      },
+      {
+       "key": "ups",
+       "value": "ups"
+      },
+      {
+       "key": "inpost",
+       "value": "inpost"
+      },
+      {
+       "key": "bartolini",
+       "value": "bartolini"
+      }
+     ]
+    },
+    {
+     "type": "bool",
+     "uri": "/item_shippable",
+     "label": "Disponibile alla spedizione",
+     "values": [
+      {
+       "key": "1",
+       "value": "Sì"
+      }
+     ]
+    },
+    {
+     "type": "number",
+     "uri": "/price",
+     "label": "Prezzo",
+     "values": [
+      {
+       "key": "35",
+       "value": "35 €"
+      }
+     ]
+    },
+    {
+     "type": "bool",
+     "uri": "/item_shipping_allowed",
+     "label": "Disponibile alla spedizione",
+     "values": [
+      {
+       "key": "1",
+       "value": "Sì"
+      }
+     ]
+    }
+   ],
+   "advertiser": {
+    "user_id": "0000000",
+    "name": "",
+    "company": false,
+    "type": 0
+   },
+   "geo": {
+    "region": {
+     "key": "9",
+     "uri": "/region",
+     "value": "Toscana",
+     "friendly_name": "toscana",
+     "label": "Regione",
+     "level": 0,
+     "neighbors": "9,10,11,12,3,8"
+    },
+    "city": {
+     "key": "9",
+     "uri": "/city",
+     "value": "Prato",
+     "label": "Provincia",
+     "friendly_name": "prato",
+     "short_name": "PO",
+     "level": 1,
+     "istat": "100",
+     "region_id": "9"
+    },
+    "town": {
+     "key": "100005",
+     "uri": "/town",
+     "value": "Prato",
+     "label": "Comune",
+     "level": 2,
+     "istat": "100005",
+     "region_id": "9",
+     "city_id": "9",
+     "has_zone": false,
+     "friendly_name": "prato",
+     "lat": 43.880891,
+     "lon": 11.096804
+    },
+    "uri": "/geo",
+    "label": "Comune",
+    "type": "geo"
+   },
+   "urls": {
+    "default": "https://www.subito.it/informatica/hp-tpc-w016-thin-client-nero-pc-client-prato-657586319.htm",
+    "mobile": "https://www.subito.it/informatica/hp-tpc-w016-thin-client-nero-pc-client-prato-657586319.htm"
+   }
+  },
+  {
+   "urn": "id:ad:948fa746-bb2e-4e80-9ce2-416e05d5803a:list:657340618",
+   "type": {
+    "key": "s",
+    "value": "In vendita",
+    "weight": 0
+   },
+   "category": {
+    "key": "10",
+    "value": "Informatica",
+    "friendly_name": "informatica",
+    "macrocategory_id": "9",
+    "weight": 23
+   },
+   "subject": "thin client mini pc DELL Wyse 5010 + alimentatore",
+   "body": "Thin Client mini PC Dell Wyse 5010 in condizioni pari al nuovo\n\nPulito e ricondionato\nPasta termica cambiata appena prima di metterlo in vendita;\nSenza OS (lo usavo con Home Assistant, ma va reinstallato un OS a vostra scelta.)\n\nCPU:\nAMD G-T48E dual core @1.40 Ghz\n\nRAM:\n2 GB DDR3 PC3-12800\n\nMemoria:\nSSD 8GB MLC SATA HF\n\nGPU:\nAMD Radeon HD 6250 integrata\n\nConnessioni:\n1 x DVI-I\n1 x Display Port\n1 x Ethernet 10/100/1000\n4 x USB2.0\n\nAlimentazione:\nPlug Coax 5.5mm/2.5mm 19V 3.42A\nConsumo 16W (max)\n\nDimensioni: \n17 x 4 x 18cm",
+   "dates": {
+    "display": "2026-08-16 08:50:19",
+    "expiration": "2027-08-16 08:50:19",
+    "display_iso8601": "2026-08-16T08:50:19.629+0200",
+    "expiration_iso8601": "2027-08-16T08:50:19.629+0200"
+   },
+   "images": [
+    {
+     "uri": "imgid:068416bb-92d3-4b36-8da8-dba0a95cda60",
+     "base_url": "https://s.sbito.it/img/06/068416bb-92d3-4b36-8da8-dba0a95cda60",
+     "cdn_base_url": "https://images.sbito.it/api/v1/sbt-ads-images-pro/images/06/068416bb-92d3-4b36-8da8-dba0a95cda60"
+    }
+   ],
+   "images_360": [],
+   "features": [
+    {
+     "type": "list",
+     "uri": "/shipping_carriers",
+     "label": "Corrieri per la spedizione",
+     "values": [
+      {
+       "key": "poste_italiane",
+       "value": "poste_italiane"
+      },
+      {
+       "key": "ups",
+       "value": "ups"
+      },
+      {
+       "key": "inpost",
+       "value": "inpost"
+      },
+      {
+       "key": "bartolini",
+       "value": "bartolini"
+      }
+     ]
+    },
+    {
+     "type": "bool",
+     "uri": "/item_shippable",
+     "label": "Disponibile alla spedizione",
+     "values": [
+      {
+       "key": "1",
+       "value": "Sì"
+      }
+     ]
+    },
+    {
+     "type": "number",
+     "uri": "/price",
+     "label": "Prezzo",
+     "values": [
+      {
+       "key": "49",
+       "value": "49 €"
+      }
+     ]
+    },
+    {
+     "type": "bool",
+     "uri": "/item_shipping_allowed",
+     "label": "Disponibile alla spedizione",
+     "values": [
+      {
+       "key": "1",
+       "value": "Sì"
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/item_condition",
+     "label": "Condizione",
+     "values": [
+      {
+       "key": "20",
+       "value": "Come nuovo - perfetto o ricondizionato",
+       "weight": 2,
+       "description": "Oggetto in perfette condizioni oppure rigenerato con parti sostitutive senza difetti."
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/item_shipping_type",
+     "label": "Metodo di spedizione",
+     "values": [
+      {
+       "key": "0",
+       "value": "Spedizione con TuttoSubito",
+       "weight": 1
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/computer_type",
+     "label": "Tipologia di computer",
+     "values": [
+      {
+       "key": "1",
+       "value": "Computer Fissi",
+       "weight": 2
+      }
+     ]
+    },
+    {
+     "type": "number",
+     "uri": "/item_shipping_cost_tuttosubito",
+     "label": "Costo della spedizione",
+     "values": [
+      {
+       "key": "2,39",
+       "value": "2,39 €"
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "uri": "/item_shipping_package_size",
+     "label": "Peso del pacco",
+     "values": [
+      {
+       "key": "10",
+       "value": "Piccolo - fino a 2kg",
+       "weight": 0
+      }
+     ]
+    }
+   ],
+   "advertiser": {
+    "user_id": "0000000",
+    "name": "",
+    "company": false,
+    "type": 0
+   },
+   "geo": {
+    "region": {
+     "key": "10",
+     "uri": "/region",
+     "value": "Umbria",
+     "friendly_name": "umbria",
+     "label": "Regione",
+     "level": 0,
+     "neighbors": "10,11,12,9"
+    },
+    "city": {
+     "key": "1",
+     "uri": "/city",
+     "value": "Perugia",
+     "label": "Provincia",
+     "friendly_name": "perugia",
+     "short_name": "PG",
+     "level": 1,
+     "istat": "054",
+     "region_id": "10"
+    },
+    "town": {
+     "key": "054039",
+     "uri": "/town",
+     "value": "Perugia",
+     "label": "Comune",
+     "level": 2,
+     "istat": "054039",
+     "region_id": "10",
+     "city_id": "1",
+     "has_zone": false,
+     "friendly_name": "perugia",
+     "lat": 43.111831,
+     "lon": 12.388538
+    },
+    "uri": "/geo",
+    "label": "Comune",
+    "type": "geo"
+   },
+   "urls": {
+    "default": "https://www.subito.it/informatica/thin-client-mini-pc-dell-wyse-5010-alimentatore-perugia-657340618.htm",
+    "mobile": "https://www.subito.it/informatica/thin-client-mini-pc-dell-wyse-5010-alimentatore-perugia-657340618.htm"
+   }
+  }
+ ]
+}

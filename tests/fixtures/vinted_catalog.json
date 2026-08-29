@@ -1,0 +1,52 @@
+{
+ "items": [
+  {
+   "id": 9806352123,
+   "title": "Giacca Barbour",
+   "url": "https://www.vinted.it/items/9806352123-giacca-barbour",
+   "price": {
+    "amount": "110.0",
+    "currency_code": "EUR"
+   },
+   "brand_title": "Barbour",
+   "size_title": "XXL",
+   "status": "Ottime",
+   "photo": {
+    "url": "https://images1.vinted.net/t/05_002b7_3Lto4KpwnJWfddmUi3Ge2axU/f800/1787922715.jpeg?s=b16b22189e83e2e5ae4f7fe1b0ed4e6790b93040",
+    "high_resolution": {
+     "id": "05_002b7_3Lto4KpwnJWfddmUi3Ge2axU",
+     "timestamp": 1787922715,
+     "orientation": null
+    }
+   },
+   "user": {
+    "login": "utente_esempio_1",
+    "city": null
+   }
+  },
+  {
+   "id": 9806312295,
+   "title": "Veste Barbour matelassée vert olive",
+   "url": "/items/9806312295-esempio",
+   "price": {
+    "amount": "75.0",
+    "currency_code": "EUR"
+   },
+   "brand_title": "Barbour",
+   "size_title": "XL",
+   "status": "Ottime",
+   "photo": {
+    "url": "https://images1.vinted.net/t/02_0225f_Pme56amVYEvxXrjADmkwLJKg/f800/1787922514.jpeg?s=de2cd41abbbcab0410f372dcdf45a50b9eb00e81",
+    "high_resolution": null
+   },
+   "user": {
+    "login": "utente_esempio_2",
+    "city": null
+   }
+  }
+ ],
+ "pagination": {
+  "current_page": 1,
+  "total_pages": 12
+ }
+}
