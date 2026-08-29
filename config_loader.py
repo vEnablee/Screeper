@@ -144,6 +144,9 @@ def _impostazioni_da_dict(dati: Any) -> Impostazioni:
         notifica_ogni_controllo=str(
             d.get("notifica_ogni_controllo") or base.notifica_ogni_controllo
         ).strip().lower(),
+        riepilogo_ogni_minuti=_intero(
+            d.get("riepilogo_ogni_minuti"), base.riepilogo_ogni_minuti, 0
+        ),
     )
     # Coerenza dei delay: se invertiti o negativi si riportano a valori sani.
     if impostazioni.delay_min_secondi < 0:

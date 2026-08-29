@@ -232,8 +232,8 @@ def esegui_ricerca(
     quarantena: set[str],
     solo_piattaforma: str | None,
     log: logging.Logger,
-) -> tuple[list[Annuncio], list[str]]:
-    """Interroga le piattaforme di una ricerca. Restituisce (annunci, errori)."""
+) -> tuple[list[Annuncio], list[str], list[tuple[str, str, str]]]:
+    """Interroga le piattaforme. Restituisce (annunci, errori, blocchi)."""
     primo_avvio = stato.primo_avvio(ricerca.nome)
 
     # Dopo una pausa lunga si leggono due pagine invece di una: la prima
@@ -258,6 +258,7 @@ def esegui_ricerca(
 
     raccolti: list[Annuncio] = []
     errori: list[str] = []
+    blocchi: list[tuple[str, str, str]] = []
 
     for piattaforma in ricerca.piattaforme:
         if solo_piattaforma and piattaforma != solo_piattaforma:
@@ -288,6 +289,7 @@ def esegui_ricerca(
             stato.registra_esito(
                 piattaforma, EsitoScraper.BLOCCATO, errore=str(exc), impostazioni=impostazioni
             )
+            blocchi.append((piattaforma, ricerca.nome, str(exc)))
             quarantena.add(piattaforma)
             continue
         except ScraperError as exc:
@@ -314,7 +316,7 @@ def esegui_ricerca(
         # richieste allo stesso dominio. Aspettare anche fra domini diversi
         # allungherebbe il run senza proteggere nulla.
 
-    return raccolti, errori
+    return raccolti, errori, blocchi
 
 
 # ---------------------------------------------------------------------------
@@ -535,6 +537,7 @@ def esegui(opzioni: argparse.Namespace) -> int:
     }
     ricerche_in_uso: set[str] = {r.nome for r in configurazione.ricerche}
     dettaglio_ricerche: list[dict[str, Any]] = []
+    blocchi_totali: list[tuple[str, str, str]] = []
 
     try:
         # 4) Menu dei comandi (i suggerimenti su "/"): confrontato con quanto
@@ -608,13 +611,14 @@ def esegui(opzioni: argparse.Namespace) -> int:
             )
             primo_avvio = stato.primo_avvio(ricerca.nome)
 
-            grezzi, errori_ricerca = esegui_ricerca(
+            grezzi, errori_ricerca, blocchi_ricerca = esegui_ricerca(
                 ricerca,
                 scrapers=scrapers, stato=stato, impostazioni=impostazioni,
                 http=http, quarantena=quarantena,
                 solo_piattaforma=opzioni.solo_piattaforma, log=log,
             )
             errori.extend(errori_ricerca)
+            blocchi_totali.extend(blocchi_ricerca)
 
             filtrati = filtra(grezzi, ricerca, log)
             nuovi = seleziona_nuovi(
@@ -666,9 +670,33 @@ def esegui(opzioni: argparse.Namespace) -> int:
             richieste=http.richieste, errori=errori,
         )
 
-        # 10) Avviso di avvenuto controllo.
+        # 10) ALLARMI IMMEDIATI. Un blocco va detto subito, non fra un'ora:
+        #     è l'unico caso in cui serve interrompere qualcosa. Si segnala
+        #     una volta per episodio, non a ogni tentativo.
+        attive = [r.nome for r in configurazione.ricerche if r.eseguibile]
+        gia_avvisate: set[str] = set()
+        for piattaforma, nome_ricerca, errore in blocchi_totali:
+            if piattaforma in gia_avvisate:
+                continue
+            if stato.blocco_da_segnalare(piattaforma):
+                if notifier.invia_alert_blocco(
+                    piattaforma, nome_ricerca, errore,
+                    impostazioni.run_pausa_dopo_blocco, attive,
+                ):
+                    stato.marca_blocco_segnalato(piattaforma)
+                gia_avvisate.add(piattaforma)
+
+        # Chiusura dell'episodio: senza, resta il dubbio se sia rientrato.
+        for piattaforma in sorted(piattaforme_in_uso):
+            if stato.ripresa_da_segnalare(piattaforma):
+                if notifier.invia_ripresa(piattaforma):
+                    stato.marca_ripresa(piattaforma)
+
+        # 11) Riepilogo periodico: dice che tutto gira, senza dirlo ogni
+        #     cinque minuti.
         modalita = impostazioni.notifica_ogni_controllo
-        if modalita != "mai" and not opzioni.seed:
+        if (modalita != "mai" and not opzioni.seed
+                and stato.riepilogo_dovuto(impostazioni.riepilogo_ogni_minuti)):
             testo = componi_stato_controllo(
                 stato=stato, impostazioni=impostazioni,
                 dettaglio=dettaglio_ricerche, saltate=nomi_saltate,
@@ -676,15 +704,16 @@ def esegui(opzioni: argparse.Namespace) -> int:
                 richieste=http.richieste, errori=errori, terminato=terminato,
             )
             if modalita == "sempre":
-                notifier.invia_messaggio(testo)
+                inviato = notifier.invia_messaggio(testo)
             else:
-                # "aggiorna": si riscrive sempre lo stesso messaggio, così la
-                # chat non si riempie e lo si può fissare in cima.
                 stato.messaggio_stato_id = notifier.invia_stato_controllo(
                     testo, stato.messaggio_stato_id
                 )
+                inviato = stato.messaggio_stato_id is not None
+            if inviato:
+                stato.marca_riepilogo()
 
-        # 11) Errori e heartbeat.
+        # 12) Errori e heartbeat.
         if errori and impostazioni.notifica_errori and not opzioni.seed:
             notifier.invia_errori(errori)
 

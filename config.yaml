@@ -66,19 +66,25 @@ impostazioni:
   heartbeat_giornaliero: true
   heartbeat_ora: 9   # ora locale (timezone sopra)
 
-  # Notifica su Telegram anche gli errori di scraping, non solo gli annunci.
-  # Se false gli errori restano solo nei log di GitHub Actions.
-  notifica_errori: true
+  # Elenco degli errori a ogni controllo. Tenuto spento: con controlli ogni
+  # cinque minuti un blocco persistente produrrebbe un messaggio per giro.
+  # I blocchi hanno un allarme dedicato che scatta subito e una sola volta
+  # per episodio; gli altri errori compaiono nel riepilogo orario.
+  notifica_errori: false
 
-  # Avviso di avvenuto controllo:
-  #   aggiorna  un solo messaggio riscritto ogni volta, senza squillo (fissalo
-  #             in cima alla chat). Consigliato.
-  #   sempre    un messaggio nuovo a ogni controllo: sono decine al giorno e
-  #             le notifiche degli annunci ci annegherebbero dentro.
-  #   mai       nessun avviso.
+  # Riepilogo periodico: serve a sapere che tutto gira.
+  #   COME:      sempre = messaggio nuovo, aggiorna = sempre lo stesso
+  #              riscritto (senza squillo), mai = nessun riepilogo
+  #   OGNI QUANTO: riepilogo_ogni_minuti. Con controlli ogni 5 minuti, 60
+  #              significa un messaggio l'ora invece di quasi duecento al
+  #              giorno. 0 = a ogni controllo.
+  #
+  # I problemi non aspettano il riepilogo: un blocco fa scattare un allarme
+  # immediato, con i comandi pronti per fermare la ricerca colpevole.
   notifica_ogni_controllo: sempre
 
 
+  riepilogo_ogni_minuti: 60
 ricerche:
 
   # ---------------------------------------------------------------------------

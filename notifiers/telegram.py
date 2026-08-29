@@ -294,6 +294,46 @@ class TelegramNotifier:
         self.falliti += 1
         return None
 
+    def invia_alert_blocco(
+        self, piattaforma: str, ricerca: str, errore: str,
+        controlli_pausa: int, ricerche_attive: list[str],
+    ) -> bool:
+        """
+        Avvisa che una piattaforma ci ha bloccati, con cosa fare.
+
+        Un allarme che dice "è successo qualcosa" senza dire come reagire
+        costringe ad aprire il portatile per scoprirlo. Qui ci sono i comandi
+        pronti da toccare.
+        """
+        righe = [
+            f"⛔ <b>{esc(piattaforma.capitalize())} ci ha bloccati</b>",
+            "",
+            f"Durante la ricerca <b>{esc(ricerca)}</b>.",
+            f"<code>{esc(errore[:180])}</code>",
+            "",
+            f"{esc(piattaforma.capitalize())} resta in pausa per {controlli_pausa} "
+            "controlli, poi riprova da sola. Se il blocco è passeggero non devi "
+            "fare nulla.",
+            "",
+            "<b>Se si ripete, rallenta:</b>",
+        ]
+        for nome in ricerche_attive[:4]:
+            righe.append(f"• <code>/pause {esc(nome)}</code>")
+        righe.append("• <code>/stop</code> — ferma tutte le ricerche")
+        righe.append("• <code>/spegni conferma</code> — ferma anche il monitor")
+        righe.append("")
+        righe.append(
+            "<i>La causa più comune è una frequenza troppo alta: alza "
+            "«ogni quanti minuti» nella dashboard.</i>"
+        )
+        return self.invia_messaggio("\n".join(righe))
+
+    def invia_ripresa(self, piattaforma: str) -> bool:
+        """Chiude l'episodio di blocco: senza, resta il dubbio."""
+        return self.invia_messaggio(
+            f"✅ <b>{esc(piattaforma.capitalize())} ha ripreso a rispondere.</b>"
+        )
+
     def invia_alert_scraper(self, piattaforma: str, run_a_vuoto: int, ultimo_errore: str | None) -> bool:
         """Alert dedicato quando uno scraper sembra rotto."""
         righe = [

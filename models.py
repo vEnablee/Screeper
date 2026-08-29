@@ -339,11 +339,14 @@ class Impostazioni:
     heartbeat_giornaliero: bool = True
     heartbeat_ora: int = 9
     notifica_errori: bool = True
-    # Avviso a ogni controllo: "mai" | "sempre" | "aggiorna".
-    #   mai      -> nessun messaggio, si notificano solo gli annunci
-    #   sempre   -> un messaggio nuovo a ogni controllo (con squillo)
-    #   aggiorna -> un solo messaggio, riscritto ogni volta (senza squillo)
-    notifica_ogni_controllo: str = "aggiorna"
+    # COME viene consegnato il riepilogo: "mai" | "sempre" | "aggiorna".
+    #   mai      -> nessun riepilogo
+    #   sempre   -> un messaggio nuovo (con squillo)
+    #   aggiorna -> sempre lo stesso messaggio, riscritto (senza squillo)
+    notifica_ogni_controllo: str = "sempre"
+    # OGNI QUANTO. 0 = a ogni controllo. Con controlli ogni 5 minuti, 60
+    # significa un riepilogo l'ora invece di quasi duecento al giorno.
+    riepilogo_ogni_minuti: int = 60
 
 
 @dataclass(slots=True)

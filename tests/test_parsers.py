@@ -2235,3 +2235,104 @@ class TestEtaMassima(unittest.TestCase):
         self.assertEqual(_ricerca_da_dict({**base, "eta_massima_giorni": 3}, 0).eta_massima_giorni, 3)
         self.assertIsNone(_ricerca_da_dict({**base, "eta_massima_giorni": 0}, 0).eta_massima_giorni)
         self.assertIsNone(_ricerca_da_dict(base, 0).eta_massima_giorni)
+
+
+class TestRiepilogoPeriodico(unittest.TestCase):
+    """
+    Il riepilogo dice "tutto gira": con controlli ogni 5 minuti mandarlo
+    ogni volta sarebbero quasi duecento messaggi al giorno.
+    """
+
+    def test_primo_riepilogo_sempre_dovuto(self) -> None:
+        self.assertTrue(Stato.nuovo().riepilogo_dovuto(60))
+
+    def test_non_si_ripete_prima_del_tempo(self) -> None:
+        stato = Stato.nuovo()
+        stato.marca_riepilogo()
+        self.assertFalse(stato.riepilogo_dovuto(60))
+        self.assertFalse(stato.riepilogo_dovuto(60, adesso=adesso_utc() + timedelta(minutes=59)))
+
+    def test_torna_dovuto_scaduto_il_tempo(self) -> None:
+        stato = Stato.nuovo()
+        stato.marca_riepilogo()
+        self.assertTrue(stato.riepilogo_dovuto(60, adesso=adesso_utc() + timedelta(minutes=61)))
+
+    def test_zero_significa_a_ogni_controllo(self) -> None:
+        stato = Stato.nuovo()
+        stato.marca_riepilogo()
+        self.assertTrue(stato.riepilogo_dovuto(0))
+
+
+class TestAllarmeBlocco(unittest.TestCase):
+    """
+    Un blocco va detto subito e una volta sola per episodio: a ogni tentativo
+    sarebbe un messaggio ogni cinque minuti, peggio del problema.
+    """
+
+    def setUp(self) -> None:
+        from models import Impostazioni
+        self.imp = Impostazioni(run_pausa_dopo_blocco=12)
+        self.stato = Stato.nuovo()
+
+    def _blocca(self):
+        from models import EsitoScraper
+        self.stato.registra_esito("subito", EsitoScraper.BLOCCATO,
+                                  errore="HTTP 403", impostazioni=self.imp)
+
+    def _riprende(self):
+        from models import EsitoScraper
+        self.stato.registra_esito("subito", EsitoScraper.OK, risultati=12)
+
+    def test_segnalato_una_volta_sola(self) -> None:
+        self._blocca()
+        self.assertTrue(self.stato.blocco_da_segnalare("subito"))
+        self.stato.marca_blocco_segnalato("subito")
+        self.assertFalse(self.stato.blocco_da_segnalare("subito"))
+        self._blocca()
+        self.assertFalse(self.stato.blocco_da_segnalare("subito"),
+                         "stesso episodio: non si ripete")
+
+    def test_la_ripresa_chiude_l_episodio(self) -> None:
+        self._blocca()
+        self.stato.marca_blocco_segnalato("subito")
+        self._riprende()
+        self.assertTrue(self.stato.ripresa_da_segnalare("subito"))
+        self.stato.marca_ripresa("subito")
+        self.assertFalse(self.stato.ripresa_da_segnalare("subito"))
+
+    def test_un_nuovo_blocco_dopo_la_ripresa_viene_segnalato(self) -> None:
+        self._blocca(); self.stato.marca_blocco_segnalato("subito")
+        self._riprende(); self.stato.marca_ripresa("subito")
+        self._blocca()
+        self.assertTrue(self.stato.blocco_da_segnalare("subito"))
+
+    def test_piattaforma_sana_non_genera_allarmi(self) -> None:
+        self._riprende()
+        self.assertFalse(self.stato.blocco_da_segnalare("subito"))
+        self.assertFalse(self.stato.ripresa_da_segnalare("subito"))
+
+    def test_il_messaggio_contiene_i_comandi(self) -> None:
+        from notifiers.telegram import TelegramNotifier
+        n = TelegramNotifier.__new__(TelegramNotifier)
+        n.token = n.chat_id = "x"; n.abilitato = True
+        n.inviati = n.falliti = 0; n._ultimo_invio = 0.0
+        n._ritmo = lambda: None  # type: ignore[method-assign]
+        catturati = []
+        n._chiama = lambda m, p, tentativi=2: (catturati.append(p["text"]), {"message_id": 1})[1]  # type: ignore[method-assign]
+        n.invia_alert_blocco("subito", "etb-rivali", "HTTP 403", 12, ["etb-rivali", "ps5-pro"])
+        testo = catturati[0]
+        self.assertIn("/pause etb-rivali", testo)
+        self.assertIn("/stop", testo)
+        self.assertIn("/spegni conferma", testo)
+        self.assertIn("403", testo)
+
+    def test_nomi_neutralizzati_nell_allarme(self) -> None:
+        from notifiers.telegram import TelegramNotifier
+        n = TelegramNotifier.__new__(TelegramNotifier)
+        n.token = n.chat_id = "x"; n.abilitato = True
+        n.inviati = n.falliti = 0; n._ultimo_invio = 0.0
+        n._ritmo = lambda: None  # type: ignore[method-assign]
+        catturati = []
+        n._chiama = lambda m, p, tentativi=2: (catturati.append(p["text"]), {"message_id": 1})[1]  # type: ignore[method-assign]
+        n.invia_alert_blocco("subito", "a<b>c", "<script>", 12, ["a<b>c"])
+        self.assertNotIn("<script>", catturati[0])

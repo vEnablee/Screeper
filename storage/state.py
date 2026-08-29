@@ -87,6 +87,7 @@ class Stato:
         # Id del messaggio di stato su Telegram, riscritto a ogni controllo
         # invece di mandarne uno nuovo.
         d.setdefault("messaggio_stato_id", None)
+        d.setdefault("ultimo_riepilogo", None)
         if not isinstance(d["statistiche"].get("per_giorno"), dict):
             d["statistiche"]["per_giorno"] = {}
 
@@ -314,6 +315,46 @@ class Stato:
     @messaggio_stato_id.setter
     def messaggio_stato_id(self, valore: int | None) -> None:
         self.dati["messaggio_stato_id"] = valore
+
+    def riepilogo_dovuto(self, ogni_minuti: int, adesso: datetime | None = None) -> bool:
+        """True se è passato abbastanza tempo dall'ultimo riepilogo."""
+        if ogni_minuti <= 0:
+            return True
+        ultimo = _da_iso(self.dati.get("ultimo_riepilogo"))
+        if ultimo is None:
+            return True
+        return (adesso or adesso_utc()) - ultimo >= timedelta(minutes=ogni_minuti)
+
+    def marca_riepilogo(self, adesso: datetime | None = None) -> None:
+        self.dati["ultimo_riepilogo"] = (adesso or adesso_utc()).isoformat()
+
+    # -- segnalazione dei blocchi -----------------------------------------
+
+    def blocco_da_segnalare(self, piattaforma: str) -> bool:
+        """
+        True se la piattaforma è appena stata bloccata e non l'abbiamo ancora
+        detto. Una volta sola per episodio: con controlli ogni 5 minuti, un
+        avviso a ogni tentativo sarebbe peggio del problema.
+        """
+        voce = (self.dati.get("piattaforme") or {}).get(piattaforma) or {}
+        return (
+            str(voce.get("ultimo_esito")) == EsitoScraper.BLOCCATO.value
+            and not voce.get("blocco_segnalato", False)
+        )
+
+    def marca_blocco_segnalato(self, piattaforma: str) -> None:
+        self._voce_piattaforma(piattaforma)["blocco_segnalato"] = True
+
+    def ripresa_da_segnalare(self, piattaforma: str) -> bool:
+        """True quando una piattaforma segnalata come bloccata torna a funzionare."""
+        voce = (self.dati.get("piattaforme") or {}).get(piattaforma) or {}
+        return (
+            bool(voce.get("blocco_segnalato", False))
+            and str(voce.get("ultimo_esito")) == EsitoScraper.OK.value
+        )
+
+    def marca_ripresa(self, piattaforma: str) -> None:
+        self._voce_piattaforma(piattaforma)["blocco_segnalato"] = False
 
     # -- menu dei comandi Telegram ----------------------------------------
 
