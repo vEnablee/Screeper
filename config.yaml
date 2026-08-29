@@ -211,6 +211,7 @@ ricerche:
     intervallo_minuti: 15
     piattaforme:
       - subito
+      - vinted
     parole_chiave: etb rivali predestinati
     parole_escluse:
       - vuoto
@@ -230,8 +231,8 @@ ricerche:
       - proxy
       - inglese
       - eng
-    prezzo_min: 60
-    prezzo_max: 160
+    prezzo_min: 60.0
+    prezzo_max: 160.0
     condizione: qualsiasi
     solo_titolo: true
     spedizione_inclusa_richiesta: false
