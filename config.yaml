@@ -184,3 +184,18 @@ ricerche:
     subito:
       zona: italia
       raggio_km: 0
+  - nome: etb-rivali-predestinati-ita-sealed
+    attiva: true
+    in_pausa: false
+    intervallo_minuti: 30
+    piattaforme: [subito]
+    parole_chiave: ETB
+    parole_escluse: []
+    prezzo_min:
+    prezzo_max:
+    condizione: qualsiasi
+    solo_titolo: true
+    spedizione_inclusa_richiesta: false
+    subito:
+      zona: italia
+      raggio_km: 0
