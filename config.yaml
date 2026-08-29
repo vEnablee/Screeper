@@ -5,9 +5,9 @@
 # dashboard: tutti e tre ricommittano questo file preservandone i commenti.
 #
 # `intervallo_minuti` è un freno applicato SOPRA il trigger esterno, che
-# sveglia il monitor ogni 15 minuti. Viene di fatto ARROTONDATO PER ECCESSO a
-# un multiplo di 15: 5 e 10 diventano 15, 20 diventa 30. Impostarlo sotto la
-# cadenza del trigger non serve a nulla.
+# sveglia il monitor ogni 5 minuti. Viene di fatto ARROTONDATO PER ECCESSO a
+# un multiplo di quella cadenza: con risvegli ogni 5 minuti, un intervallo di
+# 7 diventa 10. Impostarlo sotto la cadenza del trigger non serve a nulla.
 # =============================================================================
 
 impostazioni:
@@ -114,7 +114,7 @@ ricerche:
   - nome: ps5-pro
     attiva: true
     in_pausa: true
-    intervallo_minuti: 15
+    intervallo_minuti: 5
     piattaforme:
       - subito
       - vinted
@@ -151,7 +151,7 @@ ricerche:
   - nome: ps5-digital
     attiva: true
     in_pausa: true
-    intervallo_minuti: 15
+    intervallo_minuti: 5
     piattaforme:
       - subito
       - vinted

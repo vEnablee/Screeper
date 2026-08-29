@@ -1,14 +1,19 @@
 # =============================================================================
 # SCreeper — un ciclo di controllo per ogni esecuzione.
 #
-# Lo fa partire un cronjob su cron-job.org, ogni 15 minuti dalle 8:00 alle
-# 23:45 (fuso Europe/Rome, quindi l'ora legale la gestisce il servizio).
+# Lo fa partire un cronjob su cron-job.org, ogni 5 minuti dalle 8:00 alle
+# 23:55 (fuso Europe/Rome, quindi l'ora legale la gestisce il servizio).
 # Per cambiare frequenza si modifica il cronjob, non questo file.
 #
 # `intervallo_minuti` in config.yaml è un freno separato: il trigger decide
 # ogni quanto il monitor si SVEGLIA — ed è anche la latenza dei comandi
 # Telegram, perché il bot vive dentro il run — mentre l'intervallo decide
 # quante volte ciascuna ricerca interroghi davvero i marketplace.
+#
+# Un controllo con cinque ricerche attive dura circa 80 secondi: sta dentro
+# la finestra di 5 minuti con ampio margine. Se un giorno superasse i 5
+# minuti, il blocco `concurrency` accoderebbe i risvegli invece di
+# sovrapporli, e la cadenza reale si allungherebbe da sola.
 # =============================================================================
 
 name: SCreeper
