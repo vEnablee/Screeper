@@ -199,8 +199,16 @@ class Stato:
         )
 
     def in_quarantena(self, piattaforma: str) -> bool:
-        """True se la piattaforma deve essere saltata in questo run."""
-        return int(self._voce_piattaforma(piattaforma).get("quarantena_run", 0)) > 0
+        """
+        True se la piattaforma deve essere saltata in questo controllo.
+
+        Non usa `_voce_piattaforma`, che creerebbe la voce come effetto
+        collaterale: interrogare lo stato di eBay faceva comparire eBay fra le
+        piattaforme "mai eseguite" nei messaggi, pur non essendo configurato
+        da nessuna parte.
+        """
+        voce = (self.dati.get("piattaforme") or {}).get(piattaforma) or {}
+        return int(voce.get("quarantena_run", 0)) > 0
 
     def consuma_quarantena(self, piattaforma: str) -> None:
         """Scala di uno il contatore di quarantena. Da chiamare una volta per run."""
@@ -237,10 +245,14 @@ class Stato:
 
     def alert_da_inviare(self, piattaforma: str, soglia: int) -> bool:
         """
-        True quando lo scraper è a zero risultati da `soglia` run consecutivi e
-        l'alert non è ancora stato mandato. Volutamente una sola volta.
+        True quando lo scraper è a zero risultati da `soglia` controlli
+        consecutivi e l'avviso non è ancora stato mandato: volutamente una
+        sola volta.
+
+        Come `in_quarantena`, legge senza creare la voce: interrogare una
+        piattaforma mai usata non deve farla comparire nei messaggi.
         """
-        voce = self._voce_piattaforma(piattaforma)
+        voce = (self.dati.get("piattaforme") or {}).get(piattaforma) or {}
         return (
             int(voce.get("run_zero_consecutivi", 0)) >= soglia
             and not voce.get("alert_inviato", False)

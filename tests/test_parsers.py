@@ -1611,51 +1611,70 @@ class TestNomeApplicazione(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class TestAvvisoControllo(unittest.TestCase):
-    """
-    Con un controllo ogni 5 minuti sono 224 esecuzioni al giorno: un
-    messaggio nuovo per ciascuna seppellirebbe le notifiche degli annunci,
-    che sono l'unica cosa che conta. La modalità predefinita riscrive sempre
-    lo stesso messaggio.
-    """
+    """Il messaggio deve dire cosa ha girato, non solo quanti annunci."""
 
     def setUp(self) -> None:
         from datetime import timezone
         from models import EsitoScraper, Impostazioni
         self.imp = Impostazioni()
-        self.fine = datetime(2026, 8, 28, 20, 35, tzinfo=timezone.utc)
+        self.fine = datetime(2026, 8, 29, 9, 15, tzinfo=timezone.utc)
         self.stato = Stato.nuovo()
-        self.stato.registra_esito("subito", EsitoScraper.OK, risultati=15)
-        self.stato.registra_esito("vinted", EsitoScraper.OK, risultati=42)
+        self.stato.registra_esito("subito", EsitoScraper.OK, risultati=19)
+        self.stato.registra_esito("vinted", EsitoScraper.OK, risultati=43)
+        self.dettaglio = [
+            {"nome": "ps5-pro", "trovati": 19, "filtrati": 7, "nuovi": 2},
+            {"nome": "etb-rivali", "trovati": 27, "filtrati": 19, "nuovi": 0},
+        ]
 
     def _testo(self, **extra):
         from main import componi_stato_controllo
-        campi = dict(stato=self.stato, impostazioni=self.imp, ricerche_eseguite=2,
-                     nuovi=3, notificati=3, richieste=5, errori=[], terminato=self.fine)
+        campi = dict(stato=self.stato, impostazioni=self.imp, dettaglio=self.dettaglio,
+                     saltate=[], nuovi=2, notificati=2, richieste=7, errori=[],
+                     terminato=self.fine)
         campi.update(extra)
         return componi_stato_controllo(**campi)
 
-    def test_riepilogo_compatto(self) -> None:
+    def test_elenca_le_ricerche_eseguite(self) -> None:
         testo = self._testo()
-        self.assertIn("Controllo eseguito", testo)
-        self.assertIn("2 ricerche", testo)
-        self.assertIn("3 nuovi", testo)
+        self.assertIn("ps5-pro", testo)
+        self.assertIn("etb-rivali", testo)
+        self.assertIn("7 rilevanti", testo)
+        self.assertIn("2 nuovi", testo)
+
+    def test_le_ricerche_senza_novita_non_dicono_zero(self) -> None:
+        """"0 nuovi" ripetuto su ogni riga è rumore: un trattino basta."""
+        self.assertIn("—", self._testo())
+
+    def test_elenca_le_ricerche_in_attesa(self) -> None:
+        testo = self._testo(saltate=["etb-scintille"])
+        self.assertIn("etb-scintille", testo)
+        self.assertIn("in attesa", testo)
+
+    def test_stato_delle_piattaforme(self) -> None:
+        testo = self._testo()
         self.assertIn("subito", testo)
-        self.assertLess(len(testo), 400, "deve restare un messaggio breve")
+        self.assertIn("vinted", testo)
+        self.assertIn("7 richieste", testo)
+
+    def test_nessuna_ricerca_da_eseguire(self) -> None:
+        testo = self._testo(dettaglio=[], nuovi=0, notificati=0)
+        self.assertIn("nessuna ricerca da eseguire", testo)
 
     def test_gli_errori_cambiano_intestazione(self) -> None:
         testo = self._testo(errori=["vinted: BLOCCATO — HTTP 403"])
         self.assertIn("Controllo con errori", testo)
         self.assertIn("403", testo)
 
-    def test_singolare_e_plurale(self) -> None:
-        uno = self._testo(ricerche_eseguite=1, nuovi=1, notificati=1)
-        self.assertIn("1 ricerca ", uno)
-        self.assertIn("1 nuovo ", uno)
-
     def test_html_degli_errori_neutralizzato(self) -> None:
         testo = self._testo(errori=["<script>alert(1)</script> & rotto"])
         self.assertNotIn("<script>", testo)
         self.assertIn("&lt;script&gt;", testo)
+
+    def test_nomi_delle_ricerche_neutralizzati(self) -> None:
+        """Un nome con caratteri speciali romperebbe il parsing di Telegram."""
+        testo = self._testo(dettaglio=[{"nome": "a<b>&c", "trovati": 1,
+                                        "filtrati": 1, "nuovi": 0}])
+        self.assertNotIn("<b>&c", testo)
 
     def test_modalita_valide(self) -> None:
         from config_loader import _impostazioni_da_dict
@@ -1671,10 +1690,6 @@ class TestAvvisoControllo(unittest.TestCase):
             _impostazioni_da_dict({"notifica_ogni_controllo": "boh"}).notifica_ogni_controllo,
             "aggiorna",
         )
-
-    def test_il_predefinito_non_riempie_la_chat(self) -> None:
-        from models import Impostazioni
-        self.assertEqual(Impostazioni().notifica_ogni_controllo, "aggiorna")
 
 
 class TestMessaggioDiStatoRiscritto(unittest.TestCase):
@@ -1778,6 +1793,22 @@ class TestElusioneDeiFiltri(unittest.TestCase):
     def test_la_forma_normale_continua_a_funzionare(self) -> None:
         self.assertEqual(self.ricerca.parola_esclusa("PS5 Pro con controller"), "controller")
         self.assertEqual(self.ricerca.parola_esclusa("PS5 Pro NON FUNZIONANTE"), "non funzionante")
+
+
+class TestQuarantenaSenzaEffettiCollaterali(unittest.TestCase):
+
+    def test_controllare_la_quarantena_non_crea_la_voce(self) -> None:
+        """Interrogare lo stato di una piattaforma non configurata la faceva
+        comparire fra quelle "mai eseguite" nei messaggi."""
+        stato = Stato.nuovo()
+        self.assertFalse(stato.in_quarantena("ebay"))
+        self.assertEqual(stato.salute_piattaforme(), {})
+
+    def test_registrare_un_esito_invece_la_crea(self) -> None:
+        from models import EsitoScraper
+        stato = Stato.nuovo()
+        stato.registra_esito("subito", EsitoScraper.OK, risultati=3)
+        self.assertIn("subito", stato.salute_piattaforme())
 
 
 class TestPotaturaPiattaforme(unittest.TestCase):
@@ -2115,3 +2146,34 @@ class TestIntervalloEffettivo(unittest.TestCase):
                                        "ultimo_nuovo": None, "totale_notificati": 0}
         quasi = inizio + timedelta(minutes=14, seconds=45)
         self.assertTrue(stato.da_eseguire(ricerca, adesso=quasi))
+
+
+class TestPiattaformeMaiUsate(unittest.TestCase):
+    """
+    Interrogare lo stato di una piattaforma non configurata non deve crearne
+    la voce: eBay compariva come "mai eseguito" nei messaggi Telegram pur non
+    essendo in nessuna ricerca, perché il controllo della quarantena e quello
+    dell'avviso la creavano come effetto collaterale.
+    """
+
+    def test_nessuna_delle_due_letture_crea_la_voce(self) -> None:
+        stato = Stato.nuovo()
+        stato.in_quarantena("ebay")
+        stato.alert_da_inviare("ebay", 3)
+        self.assertEqual(stato.salute_piattaforme(), {})
+
+    def test_le_letture_restano_corrette(self) -> None:
+        from models import EsitoScraper, Impostazioni
+        stato = Stato.nuovo()
+        stato.registra_esito("vinted", EsitoScraper.BLOCCATO,
+                             errore="403", impostazioni=Impostazioni(run_pausa_dopo_blocco=3))
+        self.assertTrue(stato.in_quarantena("vinted"))
+        self.assertFalse(stato.in_quarantena("subito"))
+
+    def test_avviso_dopo_la_soglia(self) -> None:
+        from models import EsitoScraper
+        stato = Stato.nuovo()
+        for _ in range(3):
+            stato.registra_esito("subito", EsitoScraper.VUOTO)
+        self.assertTrue(stato.alert_da_inviare("subito", 3))
+        self.assertFalse(stato.alert_da_inviare("vinted", 3))

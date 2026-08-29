@@ -17,6 +17,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta
+from typing import Any
 
 from bot.commands import COMANDI_BOT, ProcessoreComandi
 from config_loader import ConfigError, carica_configurazione
@@ -393,21 +394,22 @@ def componi_stato_controllo(
     *,
     stato: Stato,
     impostazioni: Impostazioni,
-    ricerche_eseguite: int,
+    dettaglio: list[dict[str, Any]],
+    saltate: list[str],
     nuovi: int,
     notificati: int,
     richieste: int,
     errori: list[str],
     terminato: datetime,
 ) -> str:
-    """Riepilogo compatto di un controllo, per il messaggio su Telegram."""
+    """Riepilogo di un controllo: cosa ha girato e con quale esito."""
     icone = {
         EsitoScraper.OK.value: "✅", EsitoScraper.VUOTO.value: "➖",
         EsitoScraper.BLOCCATO.value: "⛔", EsitoScraper.ERRORE.value: "❌",
         EsitoScraper.QUARANTENA.value: "⏸",
     }
-    piattaforme = " · ".join(
-        f"{icone.get(str(v.get('ultimo_esito')), '❔')} {nome}"
+    piattaforme = " ".join(
+        f"{icone.get(str(v.get('ultimo_esito')), '❔')}{nome}"
         for nome, v in sorted(stato.salute_piattaforme().items())
     ) or "nessuna piattaforma interrogata"
 
@@ -415,12 +417,26 @@ def componi_stato_controllo(
     righe = [
         f"<b>{intestazione}</b> — {formatta(terminato, impostazioni.timezone)}",
         "",
-        f"🔎 {ricerche_eseguite} " + ("ricerca" if ricerche_eseguite == 1 else "ricerche")
-        + f" · {richieste} richieste",
-        f"🆕 {nuovi} " + ("nuovo" if nuovi == 1 else "nuovi")
-        + f" · {notificati} " + ("notifica" if notificati == 1 else "notifiche"),
-        piattaforme,
     ]
+
+    if dettaglio:
+        larghezza = max(len(d["nome"]) for d in dettaglio)
+        corpo = []
+        for d in dettaglio:
+            esito = f"{d['nuovi']} nuovi" if d["nuovi"] else "—"
+            corpo.append(f"{d['nome']:<{larghezza}}  {d['filtrati']:>3} rilevanti  {esito}")
+        righe.append("<pre>" + esc_html("\n".join(corpo)) + "</pre>")
+    else:
+        righe.append("<i>nessuna ricerca da eseguire in questo giro</i>")
+
+    if saltate:
+        righe.append(f"⏭ in attesa del proprio turno: {esc_html(', '.join(saltate))}")
+
+    righe.append("")
+    righe.append(f"{richieste} richieste · {piattaforme}")
+    if notificati:
+        righe.append(f"📨 {notificati} " + ("notifica inviata" if notificati == 1
+                                            else "notifiche inviate"))
     if errori:
         righe.append("")
         righe.append(f"<code>{esc_html(errori[0][:160])}</code>")
@@ -515,6 +531,7 @@ def esegui(opzioni: argparse.Namespace) -> int:
         p for r in configurazione.ricerche for p in r.piattaforme
     }
     ricerche_in_uso: set[str] = {r.nome for r in configurazione.ricerche}
+    dettaglio_ricerche: list[dict[str, Any]] = []
 
     try:
         # 4) Menu dei comandi (i suggerimenti su "/"): confrontato con quanto
@@ -557,7 +574,7 @@ def esegui(opzioni: argparse.Namespace) -> int:
         }
 
         # Quarantene decise nei run precedenti: si consumano una volta sola.
-        quarantena = {p for p in SCRAPER if stato.in_quarantena(p)}
+        quarantena = {p for p in piattaforme_in_uso if stato.in_quarantena(p)}
         for piattaforma in quarantena:
             stato.consuma_quarantena(piattaforma)
         if quarantena:
@@ -569,8 +586,15 @@ def esegui(opzioni: argparse.Namespace) -> int:
             and (not opzioni.solo_ricerca or r.nome == opzioni.solo_ricerca)
             and stato.da_eseguire(r)
         ]
-        saltate = len(configurazione.ricerche) - len(da_eseguire)
-        log.info("Ricerche da eseguire ora: %d (%d saltate o non ancora dovute)", len(da_eseguire), saltate)
+        nomi_da_eseguire = {r.nome for r in da_eseguire}
+        nomi_saltate = [
+            r.nome for r in configurazione.ricerche
+            if r.eseguibile and r.nome not in nomi_da_eseguire
+        ]
+        log.info(
+            "Ricerche da eseguire ora: %d (%d non ancora dovute)",
+            len(da_eseguire), len(nomi_saltate),
+        )
 
         for indice, ricerca in enumerate(da_eseguire, start=1):
             log.info("-" * 72)
@@ -601,6 +625,10 @@ def esegui(opzioni: argparse.Namespace) -> int:
 
             stato.registra_esecuzione(ricerca.nome, notificati=len(nuovi))
             nuovi_totali.extend(nuovi)
+            dettaglio_ricerche.append({
+                "nome": ricerca.nome, "trovati": len(grezzi),
+                "filtrati": len(filtrati), "nuovi": len(nuovi),
+            })
 
         http.chiudi()
 
@@ -612,7 +640,7 @@ def esegui(opzioni: argparse.Namespace) -> int:
             inviate = notifica(nuovi_totali, notifier, stato, impostazioni, log)
 
         # 8) Alert per scraper probabilmente rotti (una sola volta ciascuno).
-        for piattaforma in sorted(SCRAPER):
+        for piattaforma in sorted(piattaforme_in_uso):
             if stato.alert_da_inviare(piattaforma, impostazioni.run_zero_per_alert):
                 voce = stato.salute_piattaforme().get(piattaforma, {})
                 log.warning(
@@ -640,9 +668,9 @@ def esegui(opzioni: argparse.Namespace) -> int:
         if modalita != "mai" and not opzioni.seed:
             testo = componi_stato_controllo(
                 stato=stato, impostazioni=impostazioni,
-                ricerche_eseguite=len(da_eseguire), nuovi=len(nuovi_totali),
-                notificati=inviate, richieste=http.richieste,
-                errori=errori, terminato=terminato,
+                dettaglio=dettaglio_ricerche, saltate=nomi_saltate,
+                nuovi=len(nuovi_totali), notificati=inviate,
+                richieste=http.richieste, errori=errori, terminato=terminato,
             )
             if modalita == "sempre":
                 notifier.invia_messaggio(testo)

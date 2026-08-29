@@ -76,7 +76,7 @@ impostazioni:
   #   sempre    un messaggio nuovo a ogni controllo: sono decine al giorno e
   #             le notifiche degli annunci ci annegherebbero dentro.
   #   mai       nessun avviso.
-  notifica_ogni_controllo: aggiorna
+  notifica_ogni_controllo: sempre
 
 
 ricerche:
