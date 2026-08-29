@@ -209,7 +209,7 @@ ricerche:
   - nome: etb-rivali-predestinati-ita-sealed
     attiva: true
     in_pausa: false
-    intervallo_minuti: 15
+    intervallo_minuti: 30
     piattaforme:
       - subito
       - vinted
