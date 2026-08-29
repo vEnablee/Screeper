@@ -113,7 +113,7 @@ ricerche:
   # ---------------------------------------------------------------------------
   - nome: ps5-pro
     attiva: true
-    in_pausa: false
+    in_pausa: true
     intervallo_minuti: 15
     piattaforme:
       - subito
