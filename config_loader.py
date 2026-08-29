@@ -234,6 +234,10 @@ def _ricerca_da_dict(dati: Any, indice: int) -> Ricerca:
         condizione=condizione,
         solo_titolo=_booleano(dati.get("solo_titolo"), True),
         spedizione_inclusa_richiesta=_booleano(dati.get("spedizione_inclusa_richiesta"), False),
+        eta_massima_giorni=(
+            _intero(dati["eta_massima_giorni"], 0, 1) or None
+            if dati.get("eta_massima_giorni") else None
+        ),
         subito=config_subito,
     )
 
@@ -310,6 +314,7 @@ def modifica_aggiungi_ricerca(documento: CommentedMap, campi: dict[str, Any]) ->
     voce["prezzo_max"] = campi.get("prezzo_max")
     voce["condizione"] = str(campi.get("condizione") or Condizione.QUALSIASI.value)
     voce["solo_titolo"] = bool(campi.get("solo_titolo", True))
+    voce["eta_massima_giorni"] = campi.get("eta_massima_giorni")
     voce["spedizione_inclusa_richiesta"] = bool(campi.get("spedizione_inclusa_richiesta", False))
 
     sotto = CommentedMap()

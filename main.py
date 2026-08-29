@@ -133,6 +133,9 @@ def filtra(
         if not ricerca.spedizione_ok(annuncio.spedizione_inclusa):
             scarta("spedizione non inclusa")
             continue
+        if not ricerca.eta_ok(annuncio):
+            scarta(f"più vecchio di {ricerca.eta_massima_giorni} giorni")
+            continue
         tenuti.append(annuncio)
 
     if motivi:

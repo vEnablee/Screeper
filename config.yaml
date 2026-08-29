@@ -143,11 +143,17 @@ ricerche:
     prezzo_min: 200.0
     prezzo_max: 400.0
     condizione: qualsiasi
+    # Scarta gli annunci pubblicati piu' di N giorni fa: su questi mercati un
+    # annuncio fermo da settimane e' invenduto per un motivo. Gli annunci di
+    # data ignota passano comunque, altrimenti si perderebbe quasi tutto
+    # Vinted, che spesso non la espone.
+    eta_massima_giorni: 3
     solo_titolo: true
     spedizione_inclusa_richiesta: false
     subito:
       zona: italia
       raggio_km: 0
+    eta_massima_giorni: 3
   - nome: ps5-digital
     attiva: true
     in_pausa: true
@@ -206,6 +212,7 @@ ricerche:
   # * 60-160 EUR. La mediana del mercato e' 125: sotto i 60 ci sono scatole
   #   vuote e carte sfuse, sopra i 160 bundle e display.
   # ---------------------------------------------------------------------------
+    eta_massima_giorni: 3
   - nome: etb-rivali-predestinati-ita-sealed
     attiva: true
     in_pausa: false
@@ -240,6 +247,7 @@ ricerche:
     subito:
       zona: italia
       raggio_km: 0
+    eta_massima_giorni: 3
   - nome: etb-scintille-folgoranti-ita-sealed
     attiva: true
     in_pausa: false
@@ -274,6 +282,7 @@ ricerche:
     subito:
       zona: italia
       raggio_km: 0
+    eta_massima_giorni: 3
   - nome: etb-ossidiana-infuocata-ita-sealed
     attiva: true
     in_pausa: false
@@ -308,3 +317,4 @@ ricerche:
     subito:
       zona: italia
       raggio_km: 0
+    eta_massima_giorni: 3

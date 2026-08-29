@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any
 
@@ -226,6 +226,8 @@ class Ricerca:
     condizione: str = Condizione.QUALSIASI.value
     solo_titolo: bool = True
     spedizione_inclusa_richiesta: bool = False
+    # Età massima dell'annuncio in giorni. None = nessun limite.
+    eta_massima_giorni: int | None = None
     subito: ConfigSubito = field(default_factory=ConfigSubito)
 
     @property
@@ -299,6 +301,21 @@ class Ricerca:
         if not self.spedizione_inclusa_richiesta:
             return True
         return spedizione_inclusa is not False
+
+    def eta_ok(self, annuncio: "Annuncio", adesso: datetime | None = None) -> bool:
+        """
+        Scarta gli annunci pubblicati troppo tempo fa.
+
+        Un annuncio di data incerta passa sempre: `data_effettiva` ripiega
+        sull'avvistamento, quindi scartarlo significherebbe buttare via tutto
+        ciò che una piattaforma non datta — su Vinted la maggioranza.
+        """
+        if not self.eta_massima_giorni:
+            return True
+        if annuncio.data_incerta or annuncio.data_pubblicazione is None:
+            return True
+        limite = (adesso or adesso_utc()) - timedelta(days=self.eta_massima_giorni)
+        return annuncio.data_pubblicazione >= limite
 
 
 @dataclass(slots=True)

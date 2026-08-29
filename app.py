@@ -1052,7 +1052,16 @@ def _campi_ricerca(ricerca, prefisso: str) -> dict[str, Any]:
              "accompagnano l'oggetto: escluderesti anche le inserzioni valide.",
     )
 
-    c1, c2, c3 = st.columns(3)
+    c0, c1, c2, c3 = st.columns(4)
+    with c0:
+        eta = st.number_input(
+            "Età max (giorni)", min_value=0, max_value=365, step=1,
+            value=int(ricerca.eta_massima_giorni) if ricerca and ricerca.eta_massima_giorni else 0,
+            key=f"{prefisso}_eta",
+            help="Scarta gli annunci pubblicati più di N giorni fa, così vedi "
+                 "solo i recenti. 0 = nessun limite. Gli annunci di data "
+                 "ignota passano comunque: su Vinted molti non hanno data.",
+        )
     with c1:
         intervallo = st.number_input(
             "Ogni quanti minuti", min_value=5, max_value=1440, step=5,
@@ -1084,6 +1093,7 @@ def _campi_ricerca(ricerca, prefisso: str) -> dict[str, Any]:
         "condizione": condizione,
         "parole_escluse": [p.strip() for p in escluse.split(",") if p.strip()],
         "intervallo_minuti": int(intervallo),
+        "eta_massima_giorni": int(eta) if eta else None,
         "zona": zona.strip().lower() or "italia",
         "solo_titolo": bool(solo_titolo),
     }
@@ -1104,6 +1114,8 @@ def _scheda_ricerca(ricerca, modificabile: bool, conteggi: dict[str, int]) -> No
         f"<b>{prezzo_leggibile(ricerca.prezzo_max)}</b></span>",
         f"<span>ogni <b>{ricerca.intervallo_minuti}</b> min</span>",
         f"<span>condizione <b>{esc(ricerca.condizione)}</b></span>",
+        (f"<span>max <b>{ricerca.eta_massima_giorni}</b> giorni</span>"
+         if ricerca.eta_massima_giorni else ""),
         f"<span><b>{conteggi.get(ricerca.nome, 0)}</b> trovati in {GIORNI_STORICO} giorni</span>",
     ]
     escluse = ""
@@ -1171,6 +1183,7 @@ def _scheda_ricerca(ricerca, modificabile: bool, conteggi: dict[str, int]) -> No
                         voce["prezzo_max"] = campi["prezzo_max"]
                         voce["condizione"] = campi["condizione"]
                         voce["intervallo_minuti"] = campi["intervallo_minuti"]
+                        voce["eta_massima_giorni"] = campi["eta_massima_giorni"]
                         voce["solo_titolo"] = campi["solo_titolo"]
                         sub = voce.get("subito")
                         if isinstance(sub, dict):

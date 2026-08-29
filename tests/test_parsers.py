@@ -2177,3 +2177,61 @@ class TestPiattaformeMaiUsate(unittest.TestCase):
             stato.registra_esito("subito", EsitoScraper.VUOTO)
         self.assertTrue(stato.alert_da_inviare("subito", 3))
         self.assertFalse(stato.alert_da_inviare("vinted", 3))
+
+
+class TestEtaMassima(unittest.TestCase):
+    """
+    Limite di età dell'annuncio: serve a vedere solo i recenti. Gli annunci di
+    data incerta passano comunque, altrimenti si butterebbe via tutto ciò che
+    una piattaforma non data — su Vinted la maggioranza.
+    """
+
+    def setUp(self) -> None:
+        from models import Ricerca
+        self.ricerca = Ricerca(nome="t", parole_chiave="x", piattaforme=["subito"],
+                               eta_massima_giorni=3)
+
+    def _annuncio(self, giorni=None, incerta=False):
+        from models import Annuncio
+        data = None if giorni is None else adesso_utc() - timedelta(days=giorni)
+        return Annuncio(piattaforma="subito", id_annuncio="1", titolo="t", url="u",
+                        data_pubblicazione=data, data_incerta=incerta)
+
+    def test_recente_passa(self) -> None:
+        self.assertTrue(self.ricerca.eta_ok(self._annuncio(giorni=1)))
+        self.assertTrue(self.ricerca.eta_ok(self._annuncio(giorni=2.9)))
+
+    def test_vecchio_scartato(self) -> None:
+        self.assertFalse(self.ricerca.eta_ok(self._annuncio(giorni=5)))
+        self.assertFalse(self.ricerca.eta_ok(self._annuncio(giorni=90)))
+
+    def test_data_incerta_passa(self) -> None:
+        self.assertTrue(self.ricerca.eta_ok(self._annuncio(giorni=90, incerta=True)))
+
+    def test_data_assente_passa(self) -> None:
+        self.assertTrue(self.ricerca.eta_ok(self._annuncio(giorni=None)))
+
+    def test_senza_limite_passa_tutto(self) -> None:
+        from models import Ricerca
+        senza = Ricerca(nome="t", parole_chiave="x", piattaforme=["subito"])
+        self.assertTrue(senza.eta_ok(self._annuncio(giorni=365)))
+
+    def test_il_filtro_e_applicato_nella_pipeline(self) -> None:
+        import logging
+        from main import filtra
+        from models import Annuncio
+        annunci = [
+            Annuncio(piattaforma="subito", id_annuncio="1", titolo="x recente", url="u1",
+                     prezzo=10, data_pubblicazione=adesso_utc() - timedelta(hours=2)),
+            Annuncio(piattaforma="subito", id_annuncio="2", titolo="x vecchio", url="u2",
+                     prezzo=10, data_pubblicazione=adesso_utc() - timedelta(days=10)),
+        ]
+        tenuti = filtra(annunci, self.ricerca, logging.getLogger("test"))
+        self.assertEqual([a.id_annuncio for a in tenuti], ["1"])
+
+    def test_lettura_dal_yaml(self) -> None:
+        from config_loader import _ricerca_da_dict
+        base = {"nome": "x", "parole_chiave": "y", "piattaforme": ["subito"]}
+        self.assertEqual(_ricerca_da_dict({**base, "eta_massima_giorni": 3}, 0).eta_massima_giorni, 3)
+        self.assertIsNone(_ricerca_da_dict({**base, "eta_massima_giorni": 0}, 0).eta_massima_giorni)
+        self.assertIsNone(_ricerca_da_dict(base, 0).eta_massima_giorni)
