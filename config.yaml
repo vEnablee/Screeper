@@ -187,13 +187,18 @@ ricerche:
   - nome: etb-rivali-predestinati-ita-sealed
     attiva: true
     in_pausa: false
-    intervallo_minuti: 30
-    piattaforme: [subito]
-    parole_chiave: ETB
-    parole_escluse: []
+    intervallo_minuti: 15
+    piattaforme:
+      - subito
+    parole_chiave: ETB Rivali Predestinati ITA Sealed
+    parole_escluse:
+      - box
+      - '36'
+      - confezione
+      - buste
     prezzo_min:
-    prezzo_max:
-    condizione: qualsiasi
+    prezzo_max: 100.0
+    condizione: nuovo
     solo_titolo: true
     spedizione_inclusa_richiesta: false
     subito:
