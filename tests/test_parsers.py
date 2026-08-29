@@ -2336,3 +2336,79 @@ class TestAllarmeBlocco(unittest.TestCase):
         n._chiama = lambda m, p, tentativi=2: (catturati.append(p["text"]), {"message_id": 1})[1]  # type: ignore[method-assign]
         n.invia_alert_blocco("subito", "a<b>c", "<script>", 12, ["a<b>c"])
         self.assertNotIn("<script>", catturati[0])
+
+
+class TestAnnunciSempreNotificati(unittest.TestCase):
+    """
+    La soglia oraria vale SOLO per il riepilogo. Gli annunci trovati partono
+    a ogni controllo: è tutto il senso del monitor, e un futuro intervento
+    sul riepilogo non deve poterli rallentare per sbaglio.
+    """
+
+    def _notificatore(self):
+        from notifiers.telegram import TelegramNotifier
+        n = TelegramNotifier.__new__(TelegramNotifier)
+        n.token = n.chat_id = "x"
+        n.tz_locale = "Europe/Rome"
+        n.abilitato = True
+        n.inviati = n.falliti = 0
+        n._ultimo_invio = 0.0
+        n._ritmo = lambda: None  # type: ignore[method-assign]
+        self.inviati: list[str] = []
+
+        def finto(metodo, payload, tentativi=2):
+            self.inviati.append(payload.get("caption") or payload.get("text") or "")
+            return {"message_id": len(self.inviati)}
+
+        n._chiama = finto  # type: ignore[method-assign]
+        return n
+
+    def _annunci(self, quanti):
+        return [
+            Annuncio(piattaforma="subito", id_annuncio=str(i), titolo=f"ETB numero {i}",
+                     url=f"https://x/{i}", prezzo=100.0 + i, ricerca="etb",
+                     data_pubblicazione=adesso_utc())
+            for i in range(quanti)
+        ]
+
+    def test_gli_annunci_partono_anche_col_riepilogo_appena_mandato(self) -> None:
+        import logging
+        from main import notifica
+        from models import Impostazioni
+        stato = Stato.nuovo()
+        stato.marca_riepilogo()          # riepilogo appena inviato
+        self.assertFalse(stato.riepilogo_dovuto(60), "il riepilogo non è dovuto")
+
+        notifier = self._notificatore()
+        inviate = notifica(self._annunci(3), notifier, stato, Impostazioni(),
+                           logging.getLogger("test"))
+        self.assertEqual(inviate, 3, "gli annunci devono partire lo stesso")
+        self.assertEqual(len(self.inviati), 3)
+
+    def test_il_tetto_per_controllo_resta_valido(self) -> None:
+        import logging
+        from main import notifica
+        from models import Impostazioni
+        notifier = self._notificatore()
+        inviate = notifica(self._annunci(20), notifier, Stato.nuovo(),
+                           Impostazioni(max_notifiche_per_run=15),
+                           logging.getLogger("test"))
+        self.assertEqual(inviate, 15)
+        # 15 schede + un riassunto per gli altri cinque
+        self.assertEqual(len(self.inviati), 16)
+        self.assertIn("Altri 5 annunci", self.inviati[-1])
+
+    def test_i_piu_recenti_per_primi(self) -> None:
+        """Se il tetto taglia, deve tagliare i meno interessanti."""
+        import logging
+        from main import notifica
+        from models import Impostazioni
+        annunci = self._annunci(3)
+        annunci[0].data_pubblicazione = adesso_utc() - timedelta(days=2)
+        annunci[1].data_pubblicazione = adesso_utc()
+        annunci[2].data_pubblicazione = adesso_utc() - timedelta(hours=1)
+        notifier = self._notificatore()
+        notifica(annunci, notifier, Stato.nuovo(), Impostazioni(),
+                 logging.getLogger("test"))
+        self.assertIn("numero 1", self.inviati[0])
+        self.assertIn("numero 0", self.inviati[-1])
