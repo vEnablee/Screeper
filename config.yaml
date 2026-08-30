@@ -319,3 +319,36 @@ ricerche:
       zona: italia
       raggio_km: 0
     eta_massima_giorni: 3
+  - nome: etb-granfesta
+    attiva: true
+    in_pausa: false
+    intervallo_minuti: 5
+    piattaforme: [subito, vinted]
+    parole_chiave: ETB Gran Festa Set Allenatore Fuoriclasse
+    parole_escluse:
+      - vuoto
+      - vuota
+      - aperto
+      - aperta
+      - usato
+      - cerco
+      - scambio
+      - singole
+      - sleeves
+      - bustine
+      - buste
+      - display
+      - bundle
+      - '36'
+      - proxy
+      - inglese
+      - eng
+    prezzo_min: 300.0
+    prezzo_max: 450.0
+    condizione: qualsiasi
+    solo_titolo: true
+    eta_massima_giorni: 3
+    spedizione_inclusa_richiesta: false
+    subito:
+      zona: italia
+      raggio_km: 0
