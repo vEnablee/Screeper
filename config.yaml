@@ -241,7 +241,7 @@ ricerche:
       - inglese
       - eng
     prezzo_min: 60.0
-    prezzo_max: 100.0
+    prezzo_max: 110.0
     condizione: qualsiasi
     solo_titolo: true
     spedizione_inclusa_richiesta: false
