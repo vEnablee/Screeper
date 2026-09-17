@@ -216,7 +216,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-rivali-predestinati-ita-sealed
     attiva: true
-    in_pausa: false
+    in_pausa: true
     intervallo_minuti: 5
     piattaforme:
       - subito
@@ -251,7 +251,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-scintille-folgoranti-ita-sealed
     attiva: true
-    in_pausa: false
+    in_pausa: true
     intervallo_minuti: 5
     piattaforme:
       - subito
@@ -286,7 +286,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-ossidiana-infuocata-ita-sealed
     attiva: true
-    in_pausa: false
+    in_pausa: true
     intervallo_minuti: 5
     piattaforme:
       - subito
@@ -321,7 +321,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-granfesta
     attiva: true
-    in_pausa: false
+    in_pausa: true
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: ETB Gran Festa Set Allenatore Fuoriclasse
@@ -354,7 +354,7 @@ ricerche:
       raggio_km: 0
   - nome: garmin-instinct-3
     attiva: true
-    in_pausa: false
+    in_pausa: true
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: Garmin Instinct 3, nuovo, usato
