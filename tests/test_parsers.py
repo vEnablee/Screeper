@@ -291,74 +291,104 @@ class TestEbay(unittest.TestCase):
 
 class TestVinted(unittest.TestCase):
     """
-    Fixture ricavata da una risposta reale dell'API catalogo, ridotta ai soli
-    campi che il parser usa e con i nomi utente sostituiti.
+    Vinted ha dismesso l'API REST interna (ora 404) passando a React Server
+    Components: i dati stanno dentro la pagina, in un payload dove il JSON è
+    annidato ed escapato. La fixture è un frammento reale di quel payload.
     """
 
     def setUp(self) -> None:
         self.scraper = scraper(VintedScraper)
-        self.items = fixture_json("vinted_catalog.json")["items"]
+        self.grezzo = fixture("vinted_catalogo.txt")
+        from scrapers.vinted import estrai_articoli
+        self.articoli = estrai_articoli(self.grezzo)
+
+    def test_estrazione_dal_payload(self) -> None:
+        self.assertEqual(len(self.articoli), 2)
+        for a in self.articoli:
+            self.assertIn("title", a)
+            self.assertIn("price", a)
 
     def test_traduzione_completa(self) -> None:
-        annuncio = self.scraper._da_json(self.items[0])
+        annuncio = self.scraper._da_json(self.articoli[0])
         assert annuncio is not None
         self.assertEqual(annuncio.piattaforma, "vinted")
         self.assertTrue(annuncio.id_annuncio.isdigit())
         self.assertTrue(annuncio.titolo)
-        self.assertTrue(annuncio.url.startswith("https://www.vinted.it/"))
+        self.assertTrue(annuncio.url.startswith("https://www.vinted.it/items/"))
         self.assertIsNotNone(annuncio.prezzo)
         self.assertEqual(annuncio.valuta, "EUR")
-        self.assertEqual(annuncio.venditore, "utente_esempio_1")
-
-    def test_condizione_abbreviata(self) -> None:
-        """Vinted scrive "Ottime", non "Ottime condizioni"."""
-        self.assertEqual(self.items[0]["status"], "Ottime")
-        annuncio = self.scraper._da_json(self.items[0])
-        assert annuncio is not None
-        self.assertEqual(annuncio.condizione, Condizione.USATO.value)
 
     def test_spedizione_mai_inclusa(self) -> None:
-        annuncio = self.scraper._da_json(self.items[0])
+        annuncio = self.scraper._da_json(self.articoli[0])
         assert annuncio is not None
         self.assertFalse(annuncio.spedizione_inclusa)
 
-    def test_data_dal_timestamp_della_foto(self) -> None:
-        """`created_at_ts` è sempre null nell'API: l'unico appiglio è il
-        timestamp della foto in alta risoluzione."""
-        self.assertIsNone(self.items[0].get("created_at_ts"))
-        atteso = self.items[0]["photo"]["high_resolution"]["timestamp"]
-        annuncio = self.scraper._da_json(self.items[0])
-        assert annuncio is not None
-        self.assertEqual(
-            annuncio.data_pubblicazione,
-            datetime.fromtimestamp(atteso, tz=timezone.utc),
-        )
-
-    def test_senza_timestamp_data_incerta(self) -> None:
-        annuncio = self.scraper._da_json(self.items[1])
+    def test_data_sempre_incerta(self) -> None:
+        """Il nuovo payload non contiene alcuna data, nemmeno il timestamp
+        della foto che l'API vecchia esponeva: va dichiarato, non dedotto."""
+        annuncio = self.scraper._da_json(self.articoli[0])
         assert annuncio is not None
         self.assertIsNone(annuncio.data_pubblicazione)
         self.assertTrue(annuncio.data_incerta)
-        # E l'annuncio ripiega sull'avvistamento, mai su una data inventata.
         self.assertEqual(annuncio.data_effettiva, annuncio.data_avvistamento)
 
-    def test_url_relativo_completato(self) -> None:
-        self.assertTrue(self.items[1]["url"].startswith("/items/"))
-        annuncio = self.scraper._da_json(self.items[1])
+    def test_condizione_dalla_seconda_riga(self) -> None:
+        from models import Condizione
+        annuncio = self.scraper._da_json(self.articoli[0])
         assert annuncio is not None
-        self.assertTrue(annuncio.url.startswith("https://www.vinted.it/items/"))
+        self.assertIn(annuncio.condizione, set(Condizione.valide()))
 
-    def test_prezzo_in_formato_vecchio(self) -> None:
-        # Le versioni precedenti dell'API mandavano il prezzo come stringa.
-        elemento = dict(self.items[0], price="42.00", currency="EUR")
-        annuncio = self.scraper._da_json(elemento)
+    def test_venditore_dall_id_utente(self) -> None:
+        """Nel payload non c'è più un nome utente: l'id basta a riconoscere le
+        ripubblicazioni dello stesso venditore."""
+        annuncio = self.scraper._da_json(self.articoli[0])
         assert annuncio is not None
-        self.assertEqual(annuncio.prezzo, 42.0)
+        self.assertTrue((annuncio.venditore or "").isdigit())
 
     def test_elemento_incompleto_scartato(self) -> None:
         self.assertIsNone(self.scraper._da_json({"id": 1}))
         self.assertIsNone(self.scraper._da_json({}))
         self.assertIsNone(self.scraper._da_json("non un dizionario"))
+
+    def test_url_costruito_se_manca_il_percorso(self) -> None:
+        elemento = dict(self.articoli[0]); elemento.pop("url", None)
+        annuncio = self.scraper._da_json(elemento)
+        assert annuncio is not None
+        self.assertEqual(annuncio.url, f"https://www.vinted.it/items/{annuncio.id_annuncio}")
+
+    def test_payload_vuoto_o_illeggibile(self) -> None:
+        from scrapers.vinted import estrai_articoli
+        self.assertEqual(estrai_articoli(""), [])
+        self.assertEqual(estrai_articoli("niente di utile qui"), [])
+        self.assertEqual(estrai_articoli('"productItem":{rotto'), [])
+
+    def test_oggetti_annidati_non_troncati(self) -> None:
+        """Una regex si fermerebbe alla prima graffa chiusa, che appartiene a
+        un oggetto interno: il prezzo andrebbe perso."""
+        from scrapers.vinted import estrai_articoli
+        frammento = ('"productItem":{"id":7,"title":"x","url":"/items/7-x",'
+                     '"price":{"amount":"12.00","currencyCode":"EUR"},'
+                     '"itemBox":{"secondLine":"Ottime"}}')
+        articoli = estrai_articoli(frammento)
+        self.assertEqual(len(articoli), 1)
+        self.assertEqual(articoli[0]["price"]["amount"], "12.00")
+
+    def test_duplicati_rimossi(self) -> None:
+        from scrapers.vinted import estrai_articoli
+        uno = ('"productItem":{"id":7,"title":"x","url":"/items/7-x",'
+               '"price":{"amount":"1.00","currencyCode":"EUR"}}')
+        self.assertEqual(len(estrai_articoli(uno + "," + uno)), 1)
+
+    def test_url_di_ricerca(self) -> None:
+        from models import Ricerca
+        ricerca = Ricerca(nome="t", parole_chiave="pokemon etb", piattaforme=["vinted"],
+                          prezzo_min=60, prezzo_max=160)
+        url = self.scraper._url(ricerca, 1)
+        self.assertIn("order=newest_first", url)
+        self.assertIn("price_from=60", url)
+        self.assertIn("price_to=160", url)
+        self.assertNotIn("page=", url)
+        self.assertIn("page=2", self.scraper._url(ricerca, 2))
 
 
 # ---------------------------------------------------------------------------
