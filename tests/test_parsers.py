@@ -2442,3 +2442,46 @@ class TestAnnunciSempreNotificati(unittest.TestCase):
                  logging.getLogger("test"))
         self.assertIn("numero 1", self.inviati[0])
         self.assertIn("numero 0", self.inviati[-1])
+
+
+class TestCifreNelleParoleChiave(unittest.TestCase):
+    """
+    Una cifra sola è discriminante quando indica il modello. Ignorarla
+    trasformava "garmin instinct 3" in "garmin instinct" e faceva passare 71
+    orologi di generazioni precedenti.
+    """
+
+    def _passa(self, kw: str, titolo: str) -> bool:
+        from main import _parole_chiave_nel_titolo
+        from models import Annuncio, Ricerca
+        ricerca = Ricerca(nome="t", parole_chiave=kw, piattaforme=["vinted"],
+                          solo_titolo=True)
+        annuncio = Annuncio(piattaforma="vinted", id_annuncio="1", titolo=titolo, url="u")
+        return _parole_chiave_nel_titolo(ricerca, annuncio)
+
+    def test_il_numero_di_modello_e_richiesto(self) -> None:
+        self.assertTrue(self._passa("garmin instinct 3", "Garmin Instinct 3 Solar 45mm"))
+        self.assertFalse(self._passa("garmin instinct 3", "Garmin instinct solar"))
+        self.assertFalse(self._passa("garmin instinct 3", "Garmin Instinct 2 Solar"))
+
+    def test_confine_di_parola_sulle_cifre(self) -> None:
+        """La sola presenza del carattere matcherebbe anche "43mm" o "2023"."""
+        self.assertFalse(self._passa("garmin instinct 3", "Garmin Instinct 43mm"))
+        self.assertFalse(self._passa("garmin instinct 3", "Garmin Instinct Solar 2023"))
+
+    def test_una_lettera_sola_resta_non_discriminante(self) -> None:
+        """Taglie e misure non devono restringere la ricerca."""
+        self.assertTrue(self._passa("maglia taglia m", "Maglia taglia media"))
+
+    def test_numeri_di_due_cifre_come_prima(self) -> None:
+        self.assertTrue(self._passa("iphone 13", "Apple iPhone 13 128GB"))
+        self.assertFalse(self._passa("iphone 13", "Apple iPhone 12"))
+
+    def test_senza_solo_titolo_non_si_filtra(self) -> None:
+        from main import _parole_chiave_nel_titolo
+        from models import Annuncio, Ricerca
+        ricerca = Ricerca(nome="t", parole_chiave="garmin instinct 3",
+                          piattaforme=["vinted"], solo_titolo=False)
+        annuncio = Annuncio(piattaforma="vinted", id_annuncio="1",
+                            titolo="Garmin instinct", url="u")
+        self.assertTrue(_parole_chiave_nel_titolo(ricerca, annuncio))

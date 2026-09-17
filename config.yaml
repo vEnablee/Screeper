@@ -324,7 +324,7 @@ ricerche:
     in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
-    parole_chiave: ETB Gran Festa Set Allenatore Fuoriclasse
+    parole_chiave: etb gran festa
     parole_escluse:
       - vuoto
       - vuota
@@ -343,6 +343,8 @@ ricerche:
       - proxy
       - inglese
       - eng
+      - accessori
+      - solo accessori
     prezzo_min: 300.0
     prezzo_max: 450.0
     condizione: qualsiasi
@@ -357,10 +359,25 @@ ricerche:
     in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
-    parole_chiave: Garmin Instinct 3, nuovo, usato
+    parole_chiave: garmin instinct 3
     parole_escluse:
+      - cinturino
+      - cinturini
+      - cover
+      - custodia
+      - vetro
+      - pellicola
+      - caricatore
+      - cavo
+      - ricambio
+      - ricambi
+      - supporto
       - rotto
       - non funzionante
+      - guasto
+      - schermo
+      - cerco
+      - scambio
     prezzo_min: 120.0
     prezzo_max: 220.0
     condizione: qualsiasi

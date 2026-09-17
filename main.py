@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import re
 import os
 import sys
 from datetime import datetime, timedelta
@@ -100,9 +101,18 @@ def _parole_chiave_nel_titolo(ricerca: Ricerca, annuncio: Annuncio) -> bool:
         return True
     titolo = annuncio.titolo.lower()
     for parola in ricerca.parole_chiave.lower().split():
-        # I termini di una lettera (misure, taglie) non sono discriminanti.
-        if len(parola) >= 2 and parola not in titolo:
-            return False
+        if len(parola) >= 2:
+            if parola not in titolo:
+                return False
+        elif parola.isdigit():
+            # Una cifra sola È discriminante quando indica il modello:
+            # ignorarla trasformava "garmin instinct 3" in "garmin instinct",
+            # facendo passare 71 orologi di generazioni precedenti.
+            # Qui serve il confine di parola: la semplice presenza del
+            # carattere matcherebbe anche "43mm" o "2023".
+            if not re.search(rf"\b{re.escape(parola)}\b", titolo):
+                return False
+        # Una lettera sola (taglie, misure) resta non discriminante.
     return True
 
 
