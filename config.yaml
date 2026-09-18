@@ -207,8 +207,17 @@ ricerche:
   #   Sealed" a 79 EUR risultava "usato". Le parole escluse (aperto, vuoto,
   #   usato nel titolo) filtrano meglio della casella.
   #
-  # * 60-160 EUR. La mediana del mercato e' 125: sotto i 60 ci sono scatole
-  #   vuote e carte sfuse, sopra i 160 bundle e display.
+  # * "promo" e "svp" fra le escluse. La carta promozionale contenuta nella ETB
+  #   viene rivenduta da sola, e il suo annuncio cita per esteso il nome della
+  #   ETB: "Charmander promo SVP 044 - ETB ossidiana infuocata" a 46 EUR. Era
+  #   la fonte di rumore piu' grossa, presente in tutte e cinque le ricerche.
+  #
+  # * Tetto di prezzo = primo quartile del mercato reale, misurato il
+  #   18/09/2026. Ogni set ha un prezzo-ancora dove si ammassano le inserzioni
+  #   a prezzo pieno (80 per Ascesa Eroica, 120 per Scintille, 200 per
+  #   Ossidiana, 450 per Granfesta): notificarle non serve, sono il mercato.
+  #   Il tetto sta appena sotto l'ancora, cosi' suona solo per gli affari.
+  #   Su Ascesa Eroica questo porta le notifiche da 34 a 7 per giro.
   # ---------------------------------------------------------------------------
     eta_massima_giorni: 3
   - nome: etb-rivali-predestinati-ita-sealed
@@ -237,8 +246,12 @@ ricerche:
       - proxy
       - inglese
       - eng
+      - promo
+      - svp
+      - lotto
+      - mini tin
     prezzo_min: 60.0
-    prezzo_max: 110.0
+    prezzo_max: 105.0
     condizione: qualsiasi
     solo_titolo: true
     spedizione_inclusa_richiesta: false
@@ -272,8 +285,12 @@ ricerche:
       - proxy
       - inglese
       - eng
+      - promo
+      - svp
+      - lotto
+      - mini tin
     prezzo_min: 60.0
-    prezzo_max: 120.0
+    prezzo_max: 115.0
     condizione: qualsiasi
     solo_titolo: true
     spedizione_inclusa_richiesta: false
@@ -307,8 +324,12 @@ ricerche:
       - proxy
       - inglese
       - eng
+      - promo
+      - svp
+      - lotto
+      - mini tin
     prezzo_min: 100.0
-    prezzo_max: 200.0
+    prezzo_max: 185.0
     condizione: qualsiasi
     solo_titolo: true
     spedizione_inclusa_richiesta: false
@@ -342,8 +363,12 @@ ricerche:
       - eng
       - accessori
       - solo accessori
+      - promo
+      - svp
+      - lotto
+      - mini tin
     prezzo_min: 300.0
-    prezzo_max: 450.0
+    prezzo_max: 430.0
     condizione: qualsiasi
     solo_titolo: true
     eta_massima_giorni: 3
@@ -376,7 +401,7 @@ ricerche:
       - cerco
       - scambio
     prezzo_min: 120.0
-    prezzo_max: 220.0
+    prezzo_max: 235.0
     condizione: qualsiasi
     solo_titolo: true
     eta_massima_giorni: 7
@@ -410,8 +435,15 @@ ricerche:
       - eng
       - accessori
       - solo accessori
+      - promo
+      - svp
+      - lotto
+      - mini tin
     prezzo_min: 50.0
-    prezzo_max: 80.0
+    # 74 e non 75: su Ascesa Eroica le ancore sono due, 75 e 80, e a 75 sta
+    # da solo il 70% dell'offerta. Il tetto deve restare sotto l'ancora piu'
+    # bassa, altrimenti la notifica suona per il prezzo di listino.
+    prezzo_max: 74.0
     condizione: qualsiasi
     solo_titolo: true
     eta_massima_giorni: 7
