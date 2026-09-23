@@ -222,7 +222,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-rivali-predestinati-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme:
       - subito
@@ -261,7 +261,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-scintille-folgoranti-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme:
       - subito
@@ -300,7 +300,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-ossidiana-infuocata-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme:
       - subito
@@ -339,7 +339,7 @@ ricerche:
     eta_massima_giorni: 3
   - nome: etb-granfesta
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: etb gran festa
@@ -378,7 +378,7 @@ ricerche:
       raggio_km: 0
   - nome: etb-ascesa-eroica-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: etb ascesa eroica
@@ -420,7 +420,7 @@ ricerche:
       raggio_km: 0
   - nome: etb-151-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: etb 151 ita
@@ -459,7 +459,7 @@ ricerche:
       raggio_km: 0
   - nome: etb-megaevoluzioni-gardevoir-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: etb megaevoluzioni gardevoir sealed
@@ -498,7 +498,7 @@ ricerche:
       raggio_km: 0
   - nome: etb-megaevoluzioni-lucario-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: etb megaevoluzioni lucario sealed
@@ -537,7 +537,7 @@ ricerche:
       raggio_km: 0
   - nome: etb-luce-nera-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: etb luce nera sealed
@@ -576,7 +576,7 @@ ricerche:
       raggio_km: 0
   - nome: etb-fuoco-bianco-ita-sealed
     attiva: true
-    in_pausa: true
+    in_pausa: false
     intervallo_minuti: 5
     piattaforme: [subito, vinted]
     parole_chiave: etb fuoco bianco sealed
