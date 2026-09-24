@@ -616,16 +616,62 @@ class TestStato(unittest.TestCase):
         stato = Stato.nuovo()
         for _ in range(3):
             stato.registra_esito("subito", EsitoScraper.VUOTO)
+            stato.consolida_salute_run()
 
         self.assertTrue(stato.alert_da_inviare("subito", 3))
         stato.marca_alert_inviato("subito")
         self.assertFalse(stato.alert_da_inviare("subito", 3))
 
-        # Un successo azzera il contatore e riarma l'alert per il futuro.
+        # Un run con risultati azzera il contatore e riarma l'alert.
         stato.registra_esito("subito", EsitoScraper.OK, risultati=5)
+        stato.consolida_salute_run()
         for _ in range(3):
             stato.registra_esito("subito", EsitoScraper.VUOTO)
+            stato.consolida_salute_run()
         self.assertTrue(stato.alert_da_inviare("subito", 3))
+
+    def test_un_run_conta_uno_anche_con_molte_ricerche(self) -> None:
+        """
+        Il falso allarme del 24/09/2026: dieci ricerche configurate, le ultime
+        cinque su prodotti che su Subito non esistono. Il contatore saliva a
+        cinque dentro UN SOLO giro e superava la soglia di tre, mentre Subito
+        rispondeva normalmente alle prime cinque ricerche.
+        """
+        from models import EsitoScraper
+        stato = Stato.nuovo()
+        for _ in range(5):
+            stato.registra_esito("subito", EsitoScraper.OK, risultati=6)
+        for _ in range(5):
+            stato.registra_esito("subito", EsitoScraper.VUOTO)
+        stato.consolida_salute_run()
+
+        salute = stato.salute_piattaforme()["subito"]
+        self.assertEqual(salute["run_zero_consecutivi"], 0)
+        self.assertFalse(stato.alert_da_inviare("subito", 3))
+
+    def test_run_davvero_a_vuoto_conta_uno(self) -> None:
+        """Se NESSUNA ricerca rende nulla, il run vale uno: l'allarme resta."""
+        from models import EsitoScraper
+        stato = Stato.nuovo()
+        for _ in range(3):
+            for _ in range(10):
+                stato.registra_esito("subito", EsitoScraper.VUOTO)
+            stato.consolida_salute_run()
+        self.assertEqual(
+            stato.salute_piattaforme()["subito"]["run_zero_consecutivi"], 3
+        )
+        self.assertTrue(stato.alert_da_inviare("subito", 3))
+
+    def test_quarantena_non_conta_come_run_a_vuoto(self) -> None:
+        """Una piattaforma saltata di proposito non e' una piattaforma rotta."""
+        from models import EsitoScraper
+        stato = Stato.nuovo()
+        for _ in range(5):
+            stato.registra_esito("vinted", EsitoScraper.QUARANTENA)
+            stato.consolida_salute_run()
+        self.assertEqual(
+            stato.salute_piattaforme().get("vinted", {}).get("run_zero_consecutivi", 0), 0
+        )
 
     def test_potatura_per_data_e_per_numero(self) -> None:
         stato = Stato.nuovo()
@@ -2205,6 +2251,7 @@ class TestPiattaformeMaiUsate(unittest.TestCase):
         stato = Stato.nuovo()
         for _ in range(3):
             stato.registra_esito("subito", EsitoScraper.VUOTO)
+            stato.consolida_salute_run()
         self.assertTrue(stato.alert_da_inviare("subito", 3))
         self.assertFalse(stato.alert_da_inviare("vinted", 3))
 

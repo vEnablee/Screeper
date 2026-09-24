@@ -657,6 +657,14 @@ def esegui(opzioni: argparse.Namespace) -> int:
             inviate = notifica(nuovi_totali, notifier, stato, impostazioni, log)
 
         # 8) Alert per scraper probabilmente rotti (una sola volta ciascuno).
+        #    Il bilancio si chiude adesso, a scraping finito: una piattaforma
+        #    conta come "a vuoto" solo se non ha reso nulla su NESSUNA delle
+        #    ricerche del giro.
+        contatori = stato.consolida_salute_run()
+        for piattaforma, a_vuoto in sorted(contatori.items()):
+            if a_vuoto:
+                log.info("%s: %d run consecutivi senza risultati", piattaforma, a_vuoto)
+
         for piattaforma in sorted(piattaforme_in_uso):
             if stato.alert_da_inviare(piattaforma, impostazioni.run_zero_per_alert):
                 voce = stato.salute_piattaforme().get(piattaforma, {})

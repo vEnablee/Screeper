@@ -58,6 +58,10 @@ class Stato:
 
     def __init__(self, dati: dict[str, Any] | None = None) -> None:
         self.dati: dict[str, Any] = dati if isinstance(dati, dict) else {}
+        # Bilancio del run in corso, per piattaforma: quante volte e' stata
+        # interrogata e quanti risultati ha reso in totale. Vive solo in
+        # memoria, non viene salvato: serve a `consolida_salute_run`.
+        self._bilancio_run: dict[str, dict[str, int]] = {}
         self._normalizza()
 
     # -- inizializzazione --------------------------------------------------
@@ -233,16 +237,53 @@ class Stato:
         voce["ultimo_errore"] = errore
 
         if esito is EsitoScraper.OK and risultati > 0:
-            voce["run_zero_consecutivi"] = 0
-            voce["alert_inviato"] = False
             voce["ultimo_ok"] = adesso_utc().isoformat()
-        elif esito in (EsitoScraper.VUOTO, EsitoScraper.ERRORE, EsitoScraper.BLOCCATO):
-            voce["run_zero_consecutivi"] = int(voce.get("run_zero_consecutivi", 0)) + 1
+
+        # Il verdetto sulla salute NON si da' qui. Questa funzione viene
+        # chiamata una volta per ogni coppia ricerca/piattaforma, e una
+        # singola ricerca senza offerta ("etb fuoco bianco" su Subito) non
+        # dice nulla sulla piattaforma. Si accumula e si decide a fine run,
+        # in `consolida_salute_run`.
+        if esito is not EsitoScraper.QUARANTENA:
+            bilancio = self._bilancio_run.setdefault(
+                piattaforma, {"interrogazioni": 0, "risultati": 0}
+            )
+            bilancio["interrogazioni"] += 1
+            bilancio["risultati"] += max(0, risultati)
 
         if esito is EsitoScraper.BLOCCATO and impostazioni is not None:
             voce["quarantena_run"] = max(
                 int(voce.get("quarantena_run", 0)), impostazioni.run_pausa_dopo_blocco
             )
+
+    def consolida_salute_run(self) -> dict[str, int]:
+        """
+        Chiude il bilancio del run e aggiorna i contatori di salute.
+
+        Una piattaforma e' "a vuoto" solo se in TUTTO il run non ha reso
+        nemmeno un risultato, su nessuna ricerca. Contare invece ogni singola
+        ricerca produceva falsi allarmi garantiti: con dieci ricerche in
+        coda all'elenco cinque prodotti di nicchia introvabili su Subito, il
+        contatore arrivava a cinque dentro un solo giro e faceva scattare la
+        soglia, mentre la piattaforma rispondeva benissimo alle altre.
+
+        Da chiamare una volta sola, a fine run, prima di leggere
+        `alert_da_inviare`. Restituisce il contatore aggiornato per
+        piattaforma, per poterlo tracciare nel log.
+        """
+        esito: dict[str, int] = {}
+        for piattaforma, bilancio in self._bilancio_run.items():
+            if not bilancio["interrogazioni"]:
+                continue
+            voce = self._voce_piattaforma(piattaforma)
+            if bilancio["risultati"] > 0:
+                voce["run_zero_consecutivi"] = 0
+                voce["alert_inviato"] = False
+            else:
+                voce["run_zero_consecutivi"] = int(voce.get("run_zero_consecutivi", 0)) + 1
+            esito[piattaforma] = int(voce["run_zero_consecutivi"])
+        self._bilancio_run = {}
+        return esito
 
     def alert_da_inviare(self, piattaforma: str, soglia: int) -> bool:
         """
