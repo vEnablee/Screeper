@@ -10,10 +10,11 @@
 # Telegram, perché il bot vive dentro il run — mentre l'intervallo decide
 # quante volte ciascuna ricerca interroghi davvero i marketplace.
 #
-# Un controllo con cinque ricerche attive dura circa 80 secondi: sta dentro
-# la finestra di 5 minuti con ampio margine. Se un giorno superasse i 5
-# minuti, il blocco `concurrency` accoderebbe i risvegli invece di
-# sovrapporli, e la cadenza reale si allungherebbe da sola.
+# Un controllo con dieci ricerche attive dura circa 50 secondi a regime (una
+# pagina per ricerca), il doppio al primo giro di una ricerca nuova, quando
+# ne legge due. Sta dentro la finestra di 5 minuti con ampio margine. Se un
+# giorno la superasse, il blocco `concurrency` accoderebbe i risvegli invece
+# di sovrapporli, e la cadenza reale si allungherebbe da sola.
 # =============================================================================
 
 name: SCreeper
